@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { BarChart3, Box, ClipboardList, Home, LogOut, Package, Settings, Tag, Truck } from "lucide-react"
+import { useAuth } from "@/lib/auth"
 
 const routes = [
   {
@@ -51,6 +52,7 @@ const routes = [
 
 export default function Sidebar() {
   const pathname = usePathname()
+  const { logout } = useAuth()
 
   return (
     <div className="hidden md:flex h-full flex-col bg-white dark:bg-gray-800 shadow-sm border-r border-gray-200 dark:border-gray-700">
@@ -81,7 +83,10 @@ export default function Sidebar() {
           ))}
         </nav>
         <div className="px-2 py-4 mt-auto">
-          <button className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors">
+          <button
+            onClick={logout}
+            className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors"
+          >
             <LogOut className="h-5 w-5 mr-3 text-gray-500" />
             Logout
           </button>

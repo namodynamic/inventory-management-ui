@@ -10,16 +10,35 @@ import { ModeToggle } from "@/components/mode-toggle"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { useAuth } from "@/lib/auth"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
+  const { user, logout } = useAuth()
 
   // Get page title based on current path
   const getPageTitle = () => {
     const path = pathname.split("/")[1]
     if (path === "") return "Dashboard"
     return path.charAt(0).toUpperCase() + path.slice(1)
+  }
+
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (!user) return "U"
+    if (user.first_name && user.last_name) {
+      return `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()
+    }
+    return user.username.substring(0, 2).toUpperCase()
   }
 
   return (
@@ -78,10 +97,24 @@ export default function Header() {
           <span className="sr-only">Notifications</span>
         </Button>
         <ModeToggle />
-        <Avatar>
-          <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
-          <AvatarFallback>JD</AvatarFallback>
-        </Avatar>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Avatar className="cursor-pointer">
+              <AvatarImage src="/placeholder.svg?height=32&width=32" alt={user?.username || "User"} />
+              <AvatarFallback>{getUserInitials()}</AvatarFallback>
+            </Avatar>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href="/settings">Profile Settings</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={logout} className="text-red-600 cursor-pointer">
+              Logout
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   )
