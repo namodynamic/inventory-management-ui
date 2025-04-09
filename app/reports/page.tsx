@@ -30,8 +30,9 @@ export default function ReportsPage() {
       try {
         setIsLoading(true)
         const [itemsData, categoriesData] = await Promise.all([inventoryAPI.getItems(), categoryAPI.getCategories()])
-        setInventoryItems(itemsData)
-        setCategories(categoriesData)
+        // Ensure data is an array
+        setInventoryItems(Array.isArray(itemsData) ? itemsData : [])
+        setCategories(Array.isArray(categoriesData) ? categoriesData : [])
       } catch (err) {
         setError("Failed to fetch data for reports")
         console.error(err)
@@ -43,10 +44,12 @@ export default function ReportsPage() {
     fetchData()
   }, [])
 
-  // Filter items based on category filter
-  const filteredItems = inventoryItems.filter((item) => {
-    return categoryFilter === "all" || item.category?.toString() === categoryFilter
-  })
+  // Filter items based on category filter - ensure inventoryItems is an array
+  const filteredItems = Array.isArray(inventoryItems)
+    ? inventoryItems.filter((item) => {
+        return categoryFilter === "all" || item.category?.toString() === categoryFilter
+      })
+    : []
 
   // Generate report data based on report type
   const generateReportData = () => {

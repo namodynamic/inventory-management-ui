@@ -45,7 +45,8 @@ export default function CategoriesPage() {
       try {
         setIsLoading(true)
         const data = await categoryAPI.getCategories()
-        setCategories(data)
+        // Ensure data is an array
+        setCategories(Array.isArray(data) ? data : [])
       } catch (err) {
         setError("Failed to fetch categories")
         console.error(err)
@@ -57,16 +58,17 @@ export default function CategoriesPage() {
     fetchCategories()
   }, [])
 
-  // Filter categories based on search query
-  const filteredCategories = categories.filter((category) =>
-    category.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+  // Filter categories based on search query - ensure categories is an array first
+  const filteredCategories = Array.isArray(categories)
+    ? categories.filter((category) => category.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : []
 
   const handleAddCategory = async () => {
     try {
       await categoryAPI.createCategory(newCategory)
       const updatedCategories = await categoryAPI.getCategories()
-      setCategories(updatedCategories)
+      // Ensure updatedCategories is an array
+      setCategories(Array.isArray(updatedCategories) ? updatedCategories : [])
       setIsAddDialogOpen(false)
       setNewCategory({ name: "", description: "" })
     } catch (err) {
@@ -83,7 +85,8 @@ export default function CategoriesPage() {
         description: newCategory.description,
       })
       const updatedCategories = await categoryAPI.getCategories()
-      setCategories(updatedCategories)
+      // Ensure updatedCategories is an array
+      setCategories(Array.isArray(updatedCategories) ? updatedCategories : [])
       setIsEditDialogOpen(false)
       setSelectedCategory(null)
       setNewCategory({ name: "", description: "" })
@@ -98,7 +101,8 @@ export default function CategoriesPage() {
     try {
       await categoryAPI.deleteCategory(selectedCategory.id)
       const updatedCategories = await categoryAPI.getCategories()
-      setCategories(updatedCategories)
+      // Ensure updatedCategories is an array
+      setCategories(Array.isArray(updatedCategories) ? updatedCategories : [])
       setIsDeleteDialogOpen(false)
       setSelectedCategory(null)
     } catch (err) {

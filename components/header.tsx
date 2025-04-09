@@ -62,6 +62,7 @@ export default function Header() {
               { name: "Inventory", path: "/inventory" },
               { name: "Categories", path: "/categories" },
               { name: "Suppliers", path: "/suppliers" },
+              { name: "Item Suppliers", path: "/item-suppliers" },
               { name: "Logs", path: "/logs" },
               { name: "Reports", path: "/reports" },
               { name: "Settings", path: "/settings" },

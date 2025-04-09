@@ -57,8 +57,14 @@ export default function InventoryPage() {
       try {
         setIsLoading(true)
         const [itemsData, categoriesData] = await Promise.all([inventoryAPI.getItems(), categoryAPI.getCategories()])
-        setItems(itemsData)
-        setCategories(categoriesData)
+
+        // Ensure itemsData is an array
+        const itemsArray = Array.isArray(itemsData) ? itemsData : []
+        setItems(itemsArray)
+
+        // Ensure categoriesData is an array
+        const categoriesArray = Array.isArray(categoriesData) ? categoriesData : []
+        setCategories(categoriesArray)
       } catch (err) {
         setError("Failed to fetch inventory data")
         console.error(err)
@@ -70,33 +76,35 @@ export default function InventoryPage() {
     fetchData()
   }, [])
 
-  // Filter and sort items
-  const filteredItems = items
-    .filter((item) => {
-      // Apply search filter
-      const matchesSearch =
-        searchQuery === "" ||
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (item.sku && item.sku.toLowerCase().includes(searchQuery.toLowerCase()))
+  // Filter and sort items - ensure items is an array before filtering
+  const filteredItems = Array.isArray(items)
+    ? items
+        .filter((item) => {
+          // Apply search filter
+          const matchesSearch =
+            searchQuery === "" ||
+            item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (item.sku && item.sku.toLowerCase().includes(searchQuery.toLowerCase()))
 
-      // Apply category filter
-      const matchesCategory = categoryFilter === "all" || item.category?.toString() === categoryFilter
+          // Apply category filter
+          const matchesCategory = categoryFilter === "all" || item.category?.toString() === categoryFilter
 
-      return matchesSearch && matchesCategory
-    })
-    .sort((a, b) => {
-      // Apply sorting
-      if (sortBy === "name") {
-        return sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
-      } else if (sortBy === "quantity") {
-        return sortOrder === "asc" ? a.quantity - b.quantity : b.quantity - a.quantity
-      } else if (sortBy === "price") {
-        return sortOrder === "asc"
-          ? Number.parseFloat(a.price) - Number.parseFloat(b.price)
-          : Number.parseFloat(b.price) - Number.parseFloat(a.price)
-      }
-      return 0
-    })
+          return matchesSearch && matchesCategory
+        })
+        .sort((a, b) => {
+          // Apply sorting
+          if (sortBy === "name") {
+            return sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
+          } else if (sortBy === "quantity") {
+            return sortOrder === "asc" ? a.quantity - b.quantity : b.quantity - a.quantity
+          } else if (sortBy === "price") {
+            return sortOrder === "asc"
+              ? Number.parseFloat(a.price) - Number.parseFloat(b.price)
+              : Number.parseFloat(b.price) - Number.parseFloat(a.price)
+          }
+          return 0
+        })
+    : []
 
   const handleAddItem = async () => {
     try {
@@ -110,7 +118,8 @@ export default function InventoryPage() {
 
       await inventoryAPI.createItem(itemData)
       const updatedItems = await inventoryAPI.getItems()
-      setItems(updatedItems)
+      // Ensure updatedItems is an array
+      setItems(Array.isArray(updatedItems) ? updatedItems : [])
       setIsAddDialogOpen(false)
       setNewItem({
         name: "",
@@ -133,7 +142,8 @@ export default function InventoryPage() {
     try {
       await inventoryAPI.deleteItem(selectedItem.id)
       const updatedItems = await inventoryAPI.getItems()
-      setItems(updatedItems)
+      // Ensure updatedItems is an array
+      setItems(Array.isArray(updatedItems) ? updatedItems : [])
       setIsDeleteDialogOpen(false)
       setSelectedItem(null)
     } catch (err) {

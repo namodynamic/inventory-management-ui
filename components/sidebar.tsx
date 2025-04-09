@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { BarChart3, Box, ClipboardList, Home, LogOut, Package, Settings, Tag, Truck } from "lucide-react"
+import { BarChart3, Box, ClipboardList, Home, LogOut, Package, Settings, Tag, Truck, BaggageClaimIcon } from "lucide-react"
 import { useAuth } from "@/lib/auth"
 
 const routes = [
@@ -30,6 +30,12 @@ const routes = [
     icon: Truck,
     href: "/suppliers",
     color: "text-orange-500",
+  },
+  {
+    label: "Item Suppliers",
+    icon: BaggageClaimIcon,
+    href: "/item-suppliers",
+    color: "text-orange-200",
   },
   {
     label: "Logs",
