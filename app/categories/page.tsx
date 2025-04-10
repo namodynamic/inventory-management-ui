@@ -23,7 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { AlertTriangle, Edit, MoreHorizontal, Plus, Search, Trash2 } from "lucide-react"
-import { categoryAPI, type Category } from "@/lib/api"
+import { categoryAPI} from "@/lib/api"
 import { Card, CardContent } from "@/components/ui/card"
 
 export default function CategoriesPage() {
@@ -45,8 +45,9 @@ export default function CategoriesPage() {
       try {
         setIsLoading(true)
         const data = await categoryAPI.getCategories()
-        // Ensure data is an array
-        setCategories(Array.isArray(data) ? data : [])
+      const categoriesArray = Array.isArray(data.results) ? data.results : [];
+
+        setCategories(categoriesArray)
       } catch (err) {
         setError("Failed to fetch categories")
         console.error(err)
@@ -58,17 +59,25 @@ export default function CategoriesPage() {
     fetchCategories()
   }, [])
 
-  // Filter categories based on search query - ensure categories is an array first
   const filteredCategories = Array.isArray(categories)
     ? categories.filter((category) => category.name.toLowerCase().includes(searchQuery.toLowerCase()))
     : []
 
   const handleAddCategory = async () => {
     try {
-      await categoryAPI.createCategory(newCategory)
+      const response = await categoryAPI.createCategory({
+        ...newCategory,
+        id: 1, 
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      console.log("Add category response:", response)
+
       const updatedCategories = await categoryAPI.getCategories()
-      // Ensure updatedCategories is an array
-      setCategories(Array.isArray(updatedCategories) ? updatedCategories : [])
+
+      const categoriesArray = Array.isArray(updatedCategories.results) ? updatedCategories.results : [];
+
+      setCategories(categoriesArray)
       setIsAddDialogOpen(false)
       setNewCategory({ name: "", description: "" })
     } catch (err) {
@@ -77,38 +86,47 @@ export default function CategoriesPage() {
   }
 
   const handleEditCategory = async () => {
-    if (!selectedCategory) return
-
+    if (!selectedCategory) return;
+  
     try {
-      await categoryAPI.updateCategory(selectedCategory.id, {
+      const response = await categoryAPI.updateCategory(selectedCategory.id, {
+        id: selectedCategory.id,
         name: newCategory.name,
         description: newCategory.description,
-      })
-      const updatedCategories = await categoryAPI.getCategories()
-      // Ensure updatedCategories is an array
-      setCategories(Array.isArray(updatedCategories) ? updatedCategories : [])
-      setIsEditDialogOpen(false)
-      setSelectedCategory(null)
-      setNewCategory({ name: "", description: "" })
+        created_at: selectedCategory.created_at,
+        updated_at: new Date().toISOString(),
+      });
+      console.log("Edit category response:", response);
+  
+      const updatedCategories = await categoryAPI.getCategories();
+  
+      const categoriesArray = Array.isArray(updatedCategories.results) ? updatedCategories.results : [];
+      setCategories(categoriesArray);
+      setIsEditDialogOpen(false);
+      setSelectedCategory(null);
+      setNewCategory({ name: "", description: "" });
     } catch (err) {
-      console.error("Failed to update category:", err)
+      console.error("Failed to update category:", err);
     }
-  }
+  };
 
   const handleDeleteCategory = async () => {
-    if (!selectedCategory) return
-
+    if (!selectedCategory) return;
+  
     try {
-      await categoryAPI.deleteCategory(selectedCategory.id)
-      const updatedCategories = await categoryAPI.getCategories()
-      // Ensure updatedCategories is an array
-      setCategories(Array.isArray(updatedCategories) ? updatedCategories : [])
-      setIsDeleteDialogOpen(false)
-      setSelectedCategory(null)
+      const response = await categoryAPI.deleteCategory(selectedCategory.id);
+      console.log("Delete category response:", response);
+  
+      const updatedCategories = await categoryAPI.getCategories();
+  
+      const categoriesArray = Array.isArray(updatedCategories.results) ? updatedCategories.results : [];
+      setCategories(categoriesArray);
+      setIsDeleteDialogOpen(false);
+      setSelectedCategory(null);
     } catch (err) {
-      console.error("Failed to delete category:", err)
+      console.error("Failed to delete category:", err);
     }
-  }
+  };
 
   if (isLoading) {
     return (

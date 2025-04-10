@@ -76,7 +76,7 @@ async function fetchAPI(endpoint: string, options: RequestInit = {}) {
     throw new Error(error.message || error.detail || "An error occurred while fetching data")
   }
 
-  return response.json()
+  return response.status === 204 ? null : response.json()
 }
 
 // API functions for inventory items
