@@ -90,12 +90,12 @@ export const inventoryAPI = {
     return fetchAPI(`/inventory/items/${queryString}`)
   },
   getItem: (id: number) => fetchAPI(`/inventory/items/${id}/`),
-  createItem: (data: any) =>
+  createItem: (data: InventoryItem) =>
     fetchAPI("/inventory/items/", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  updateItem: (id: number, data: any) =>
+  updateItem: (id: number, data: InventoryItem) =>
     fetchAPI(`/inventory/items/${id}/`, {
       method: "PUT",
       body: JSON.stringify(data),
@@ -120,12 +120,12 @@ export const categoryAPI = {
     return fetchAPI(`/inventory/categories/${queryString}`)
   },
   getCategory: (id: number) => fetchAPI(`/inventory/categories/${id}/`),
-  createCategory: (data: any) =>
+  createCategory: (data: Category) =>
     fetchAPI("/inventory/categories/", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  updateCategory: (id: number, data: any) =>
+  updateCategory: (id: number, data: Category) =>
     fetchAPI(`/inventory/categories/${id}/`, {
       method: "PUT",
       body: JSON.stringify(data),
@@ -143,12 +143,12 @@ export const supplierAPI = {
     return fetchAPI(`/inventory/suppliers/${queryString}`)
   },
   getSupplier: (id: number) => fetchAPI(`/inventory/suppliers/${id}/`),
-  createSupplier: (data: any) =>
+  createSupplier: (data: Supplier) =>
     fetchAPI("/inventory/suppliers/", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  updateSupplier: (id: number, data: any) =>
+  updateSupplier: (id: number, data: Supplier) =>
     fetchAPI(`/inventory/suppliers/${id}/`, {
       method: "PUT",
       body: JSON.stringify(data),
@@ -163,12 +163,12 @@ export const supplierAPI = {
 export const itemSupplierAPI = {
   getItemSuppliers: () => fetchAPI("/inventory/item-suppliers/"),
   getItemSupplier: (id: number) => fetchAPI(`/inventory/item-suppliers/${id}/`),
-  createItemSupplier: (data: any) =>
+  createItemSupplier: (data: InventoryItemSupplier) =>
     fetchAPI("/inventory/item-suppliers/", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  updateItemSupplier: (id: number, data: any) =>
+  updateItemSupplier: (id: number, data: InventoryItemSupplier) =>
     fetchAPI(`/inventory/item-suppliers/${id}/`, {
       method: "PUT",
       body: JSON.stringify(data),
@@ -200,74 +200,3 @@ export const logAPI = {
   },
 }
 
-// Types based on Django models
-export interface Category {
-  id: number
-  name: string
-  description: string | null
-  created_at: string
-  updated_at: string
-}
-
-export interface InventoryItem {
-  id: number
-  name: string
-  description: string | null
-  quantity: number
-  price: string
-  category: number | null
-  category_name?: string
-  owner: number | null
-  sku: string | null
-  location: string | null
-  low_stock_threshold: number
-  date_added: string
-  last_updated: string
-  is_low_stock: boolean
-}
-
-export interface Supplier {
-  id: number
-  name: string
-  contact_name: string | null
-  email: string | null
-  phone: string | null
-  address: string | null
-  owner: number
-  created_at: string
-  updated_at: string
-}
-
-export interface InventoryLog {
-  id: number
-  item: number
-  item_name?: string
-  user: number | null
-  username?: string
-  action: "ADD" | "REMOVE" | "UPDATE"
-  quantity_change: number
-  previous_quantity: number
-  new_quantity: number
-  timestamp: string
-  notes: string | null
-}
-
-export interface InventoryItemSupplier {
-  id: number
-  item: number
-  supplier: number
-  supplier_name?: string
-  supplier_sku: string | null
-  supplier_price: string
-  lead_time_days: number | null
-  notes: string | null
-}
-
-export interface InventoryLevel {
-  item_id: number
-  item_name: string
-  current_quantity: number
-  low_stock_threshold: number
-  is_low_stock: boolean
-  last_updated: string
-}

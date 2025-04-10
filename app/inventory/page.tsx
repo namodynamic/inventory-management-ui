@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import { AlertTriangle, ChevronDown, Edit, MoreHorizontal, Plus, Search, Trash2 } from "lucide-react"
-import { inventoryAPI, type InventoryItem, categoryAPI, type Category } from "@/lib/api"
+import { inventoryAPI, categoryAPI} from "@/lib/api"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -59,11 +59,11 @@ export default function InventoryPage() {
         const [itemsData, categoriesData] = await Promise.all([inventoryAPI.getItems(), categoryAPI.getCategories()])
 
         // Ensure itemsData is an array
-        const itemsArray = Array.isArray(itemsData) ? itemsData : []
+        const itemsArray = Array.isArray(itemsData) ? itemsData : itemsData.results || []
         setItems(itemsArray)
 
         // Ensure categoriesData is an array
-        const categoriesArray = Array.isArray(categoriesData) ? categoriesData : []
+        const categoriesArray = Array.isArray(categoriesData) ? categoriesData : categoriesData.results || []
         setCategories(categoriesArray)
       } catch (err) {
         setError("Failed to fetch inventory data")
@@ -208,8 +208,8 @@ export default function InventoryPage() {
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
                     {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id.toString()}>
-                        {category.name}
+                      <SelectItem key={category.name} value={category.name}>
+                         {category.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -258,7 +258,11 @@ export default function InventoryPage() {
                   const category = categories.find((c) => c.id === item.category)
                   return (
                     <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.name}</TableCell>
+                      <TableCell className="font-medium">
+                        <Link href={`/inventory/${item.id}`} className="hover:text-violet-300">
+                        {item.name}
+                        </Link>
+                        </TableCell>
                       <TableCell>{item.sku || "-"}</TableCell>
                       <TableCell>{category?.name || "-"}</TableCell>
                       <TableCell className="text-right">

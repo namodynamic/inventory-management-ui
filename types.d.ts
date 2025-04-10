@@ -87,4 +87,23 @@ interface ChartConfig {
       label: string
       color?: string
     }
-  }  
+  } 
+  
+interface Category {
+  id: number
+  name: string
+  description: string | null
+  created_at: string
+  updated_at: string
+}
+
+
+interface InventoryLevel {
+  item_id: number
+  item_name: string
+  current_quantity: number
+  low_stock_threshold: number
+  is_low_stock: boolean
+  last_updated: string
+}  
+  
