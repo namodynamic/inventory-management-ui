@@ -76,23 +76,22 @@ export default function InventoryPage() {
     fetchData()
   }, [])
 
-  // Filter and sort items - ensure items is an array before filtering
   const filteredItems = Array.isArray(items)
     ? items
         .filter((item) => {
-          // Apply search filter
+          // search filter
           const matchesSearch =
             searchQuery === "" ||
             item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             (item.sku && item.sku.toLowerCase().includes(searchQuery.toLowerCase()))
 
-          // Apply category filter
+          // category filter
           const matchesCategory = categoryFilter === "all" || item.category?.toString() === categoryFilter
 
           return matchesSearch && matchesCategory
         })
         .sort((a, b) => {
-          // Apply sorting
+          // sorting
           if (sortBy === "name") {
             return sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
           } else if (sortBy === "quantity") {
@@ -111,14 +110,13 @@ export default function InventoryPage() {
       const itemData = {
         ...newItem,
         quantity: Number(newItem.quantity),
-        price: Number(newItem.price),
+        price: newItem.price.toString(),
         category: newItem.category ? Number(newItem.category) : null,
         low_stock_threshold: Number(newItem.low_stock_threshold),
       }
 
       await inventoryAPI.createItem(itemData)
       const updatedItems = await inventoryAPI.getItems()
-      // Ensure updatedItems is an array
       setItems(Array.isArray(updatedItems) ? updatedItems : [])
       setIsAddDialogOpen(false)
       setNewItem({
@@ -140,9 +138,10 @@ export default function InventoryPage() {
     if (!selectedItem) return
 
     try {
-      await inventoryAPI.deleteItem(selectedItem.id)
+      if (selectedItem.id !== undefined) {
+        await inventoryAPI.deleteItem(selectedItem.id)
+      }
       const updatedItems = await inventoryAPI.getItems()
-      // Ensure updatedItems is an array
       setItems(Array.isArray(updatedItems) ? updatedItems : [])
       setIsDeleteDialogOpen(false)
       setSelectedItem(null)
@@ -246,6 +245,7 @@ export default function InventoryPage() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>SKU</TableHead>
+                <TableHead>Owner</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead className="text-right">Quantity</TableHead>
                 <TableHead className="text-right">Price</TableHead>
@@ -264,6 +264,7 @@ export default function InventoryPage() {
                         </Link>
                         </TableCell>
                       <TableCell>{item.sku || "-"}</TableCell>
+                      <TableCell>{item.owner_username || "-"}</TableCell>
                       <TableCell>{category?.name || "-"}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">

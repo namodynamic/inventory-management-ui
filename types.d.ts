@@ -1,18 +1,18 @@
 interface InventoryItem {
-    id: number;
+    id?: number;
     name: string;
-    description: string | null;
+    description?: string | null;
     quantity: number;
     price: string;
     category: number | null;
     category_name?: string;
-    owner: number | null;
+    owner_username?: string | null;
     sku: string | null;
     location: string | null;
-    low_stock_threshold: number;
-    date_added: string;
-    last_updated: string;
-    is_low_stock: boolean;
+    low_stock_threshold?: number;
+    date_added?: string;
+    last_updated?: string;
+    is_low_stock?: boolean;
   }
   
 interface Supplier {
