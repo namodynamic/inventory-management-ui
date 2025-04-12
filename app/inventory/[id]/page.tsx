@@ -36,7 +36,7 @@ import { Badge } from "@/components/ui/badge";
 
 export default function InventoryItemPage() {
   const router = useRouter();
-  const params = useParams(); // Use `useParams` to get the dynamic route params
+  const params = useParams(); // useParams to get the dynamic route params
   const itemId = Number(params.id); 
 
   const [item, setItem] = useState<InventoryItem | null>(null);
@@ -69,6 +69,7 @@ export default function InventoryItemPage() {
          
         // Ensure categoriesData is an array
         const categoriesArray = Array.isArray(categoriesData) ? categoriesData : categoriesData.results || []
+
         
         setCategories(categoriesArray)
         setLogs(itemLogs);
@@ -101,7 +102,8 @@ export default function InventoryItemPage() {
       setItem(updatedItem);
       setFormData(updatedItem);
 
-      // Show success message or notification
+      router.push("/inventory");
+//TODO:  Show success message or notification
     } catch (err) {
       console.error("Failed to update item:", err);
       // Show error message

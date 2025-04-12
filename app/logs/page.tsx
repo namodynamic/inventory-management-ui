@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { AlertTriangle, ArrowDown, ArrowUp, Box, Search } from "lucide-react"
-import { logAPI, type InventoryLog } from "@/lib/api"
+import { logAPI} from "@/lib/api"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -32,7 +32,7 @@ export default function LogsPage() {
         setIsLoading(true)
         const data = await logAPI.getLogs()
         // Ensure data is an array
-        setLogs(Array.isArray(data) ? data : [])
+        setLogs(Array.isArray(data.results) ? data.results : [])
       } catch (err) {
         setError("Failed to fetch logs")
         console.error(err)
@@ -44,14 +44,15 @@ export default function LogsPage() {
     fetchLogs()
   }, [])
 
-  // Filter logs based on search query, action filter, and date range - ensure logs is an array
-  const filteredLogs = Array.isArray(logs)
+
+  // Filter logs based on search query, action filter, and date range
+  const filteredLogs = Array.isArray(logs) 
     ? logs.filter((log) => {
         // Apply search filter
         const matchesSearch =
           searchQuery === "" ||
           (log.item_name && log.item_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-          (log.user_name && log.user_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (log.username && log.username.toLowerCase().includes(searchQuery.toLowerCase())) ||
           (log.notes && log.notes.toLowerCase().includes(searchQuery.toLowerCase()))
 
         // Apply action filter
@@ -182,7 +183,7 @@ export default function LogsPage() {
                         {log.action}
                       </Badge>
                     </TableCell>
-                    <TableCell>{log.user_name || `User #${log.user}`}</TableCell>
+                    <TableCell>{log.username || "-"}</TableCell>
                     <TableCell className="text-right">
                       {log.action === "ADD" ? "+" : log.action === "REMOVE" ? "-" : "±"}
                       {log.quantity_change}

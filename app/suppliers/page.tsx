@@ -1,9 +1,16 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -11,9 +18,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,119 +28,134 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { AlertTriangle, Edit, MoreHorizontal, Plus, Search, Trash2 } from "lucide-react"
-import { supplierAPI, type Supplier } from "@/lib/api"
-import { Card, CardContent } from "@/components/ui/card"
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertTriangle,
+  Edit,
+  MoreHorizontal,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react";
+import { supplierAPI } from "@/lib/api";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function SuppliersPage() {
-  const [suppliers, setSuppliers] = useState<Supplier[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null)
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(
+    null
+  );
   const [newSupplier, setNewSupplier] = useState({
     name: "",
     contact_name: "",
     email: "",
     phone: "",
     address: "",
-  })
+  });
 
   useEffect(() => {
     const fetchSuppliers = async () => {
       try {
-        setIsLoading(true)
-        const data = await supplierAPI.getSuppliers()
+        setIsLoading(true);
+        const data = await supplierAPI.getSuppliers();
         // Ensure data is an array
-        setSuppliers(Array.isArray(data) ? data : [])
+        setSuppliers(Array.isArray(data.results) ? data.results : []);
       } catch (err) {
-        setError("Failed to fetch suppliers")
-        console.error(err)
+        setError("Failed to fetch suppliers");
+        console.error(err);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchSuppliers()
-  }, [])
+    fetchSuppliers();
+  }, []);
 
-  // Filter suppliers based on search query - ensure suppliers is an array
+  // Filter suppliers based on search query
   const filteredSuppliers = Array.isArray(suppliers)
     ? suppliers.filter(
         (supplier) =>
           supplier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (supplier.contact_name && supplier.contact_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-          (supplier.email && supplier.email.toLowerCase().includes(searchQuery.toLowerCase())),
+          (supplier.contact_name &&
+            supplier.contact_name
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase())) ||
+          (supplier.email &&
+            supplier.email.toLowerCase().includes(searchQuery.toLowerCase()))
       )
-    : []
+    : [];
 
   const handleAddSupplier = async () => {
     try {
-      // In a real app, you'd get the owner ID from auth context
-      const ownerID = 1 // Placeholder
+      const ownerID = 1; // Placeholder
       await supplierAPI.createSupplier({
         ...newSupplier,
         owner: ownerID,
-      })
-      const updatedSuppliers = await supplierAPI.getSuppliers()
-      // Ensure updatedSuppliers is an array
-      setSuppliers(Array.isArray(updatedSuppliers) ? updatedSuppliers : [])
-      setIsAddDialogOpen(false)
+        id: 0,
+        created_at: "",
+        updated_at: "",
+      });
+      const updatedSuppliers = await supplierAPI.getSuppliers();
+      setSuppliers(Array.isArray(updatedSuppliers.results) ? updatedSuppliers.results : []);
+      setIsAddDialogOpen(false);
       setNewSupplier({
         name: "",
         contact_name: "",
         email: "",
         phone: "",
         address: "",
-      })
+      });
     } catch (err) {
-      console.error("Failed to add supplier:", err)
+      console.error("Failed to add supplier:", err);
     }
-  }
+  };
 
   const handleEditSupplier = async () => {
-    if (!selectedSupplier) return
+    if (!selectedSupplier) return;
 
     try {
       await supplierAPI.updateSupplier(selectedSupplier.id, {
         ...newSupplier,
         owner: selectedSupplier.owner,
-      })
-      const updatedSuppliers = await supplierAPI.getSuppliers()
-      // Ensure updatedSuppliers is an array
-      setSuppliers(Array.isArray(updatedSuppliers) ? updatedSuppliers : [])
-      setIsEditDialogOpen(false)
-      setSelectedSupplier(null)
+        id: 0,
+        created_at: "",
+        updated_at: "",
+      });
+      const updatedSuppliers = await supplierAPI.getSuppliers();
+      setSuppliers(Array.isArray(updatedSuppliers.results) ? updatedSuppliers.results : []);
+      setIsEditDialogOpen(false);
+      setSelectedSupplier(null);
       setNewSupplier({
         name: "",
         contact_name: "",
         email: "",
         phone: "",
         address: "",
-      })
+      });
     } catch (err) {
-      console.error("Failed to update supplier:", err)
+      console.error("Failed to update supplier:", err);
     }
-  }
+  };
 
   const handleDeleteSupplier = async () => {
-    if (!selectedSupplier) return
+    if (!selectedSupplier) return;
 
     try {
-      await supplierAPI.deleteSupplier(selectedSupplier.id)
-      const updatedSuppliers = await supplierAPI.getSuppliers()
-      // Ensure updatedSuppliers is an array
-      setSuppliers(Array.isArray(updatedSuppliers) ? updatedSuppliers : [])
-      setIsDeleteDialogOpen(false)
-      setSelectedSupplier(null)
+      await supplierAPI.deleteSupplier(selectedSupplier.id);
+      const updatedSuppliers = await supplierAPI.getSuppliers();
+      setSuppliers(Array.isArray(updatedSuppliers.results) ? updatedSuppliers.results : []);
+      setIsDeleteDialogOpen(false);
+      setSelectedSupplier(null);
     } catch (err) {
-      console.error("Failed to delete supplier:", err)
+      console.error("Failed to delete supplier:", err);
     }
-  }
+  };
 
   if (isLoading) {
     return (
@@ -143,7 +165,7 @@ export default function SuppliersPage() {
           <p className="mt-2">Loading suppliers...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -152,10 +174,12 @@ export default function SuppliersPage() {
         <div className="text-center text-red-500">
           <AlertTriangle className="h-8 w-8 mx-auto" />
           <p className="mt-2">{error}</p>
-          <p className="text-sm text-gray-500 mt-1">Please check your API connection</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Please check your API connection
+          </p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -186,6 +210,8 @@ export default function SuppliersPage() {
                 <TableHead>Contact Person</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
+                <TableHead>Owner</TableHead>
+                <TableHead>Address</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -193,10 +219,14 @@ export default function SuppliersPage() {
               {filteredSuppliers.length > 0 ? (
                 filteredSuppliers.map((supplier) => (
                   <TableRow key={supplier.id}>
-                    <TableCell className="font-medium">{supplier.name}</TableCell>
+                    <TableCell className="font-medium">
+                      {supplier.name}
+                    </TableCell>
                     <TableCell>{supplier.contact_name || "-"}</TableCell>
                     <TableCell>{supplier.email || "-"}</TableCell>
                     <TableCell>{supplier.phone || "-"}</TableCell>
+                    <TableCell>{supplier.owner || "-"}</TableCell>
+                    <TableCell>{supplier.address || "-"}</TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -210,15 +240,15 @@ export default function SuppliersPage() {
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => {
-                              setSelectedSupplier(supplier)
+                              setSelectedSupplier(supplier);
                               setNewSupplier({
                                 name: supplier.name,
                                 contact_name: supplier.contact_name || "",
                                 email: supplier.email || "",
                                 phone: supplier.phone || "",
                                 address: supplier.address || "",
-                              })
-                              setIsEditDialogOpen(true)
+                              });
+                              setIsEditDialogOpen(true);
                             }}
                           >
                             <Edit className="h-4 w-4 mr-2" />
@@ -227,8 +257,8 @@ export default function SuppliersPage() {
                           <DropdownMenuItem
                             className="text-red-600"
                             onClick={() => {
-                              setSelectedSupplier(supplier)
-                              setIsDeleteDialogOpen(true)
+                              setSelectedSupplier(supplier);
+                              setIsDeleteDialogOpen(true);
                             }}
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
@@ -241,7 +271,10 @@ export default function SuppliersPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                  <TableCell
+                    colSpan={5}
+                    className="h-24 text-center text-muted-foreground"
+                  >
                     No suppliers found.
                   </TableCell>
                 </TableRow>
@@ -256,7 +289,9 @@ export default function SuppliersPage() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Add New Supplier</DialogTitle>
-            <DialogDescription>Enter the details for the new supplier.</DialogDescription>
+            <DialogDescription>
+              Enter the details for the new supplier.
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
@@ -264,7 +299,9 @@ export default function SuppliersPage() {
               <Input
                 id="name"
                 value={newSupplier.name}
-                onChange={(e) => setNewSupplier({ ...newSupplier, name: e.target.value })}
+                onChange={(e) =>
+                  setNewSupplier({ ...newSupplier, name: e.target.value })
+                }
                 required
               />
             </div>
@@ -288,7 +325,9 @@ export default function SuppliersPage() {
                   id="email"
                   type="email"
                   value={newSupplier.email}
-                  onChange={(e) => setNewSupplier({ ...newSupplier, email: e.target.value })}
+                  onChange={(e) =>
+                    setNewSupplier({ ...newSupplier, email: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -297,7 +336,9 @@ export default function SuppliersPage() {
               <Input
                 id="phone"
                 value={newSupplier.phone}
-                onChange={(e) => setNewSupplier({ ...newSupplier, phone: e.target.value })}
+                onChange={(e) =>
+                  setNewSupplier({ ...newSupplier, phone: e.target.value })
+                }
               />
             </div>
             <div className="space-y-2">
@@ -305,7 +346,9 @@ export default function SuppliersPage() {
               <Textarea
                 id="address"
                 value={newSupplier.address}
-                onChange={(e) => setNewSupplier({ ...newSupplier, address: e.target.value })}
+                onChange={(e) =>
+                  setNewSupplier({ ...newSupplier, address: e.target.value })
+                }
                 rows={3}
               />
             </div>
@@ -324,7 +367,9 @@ export default function SuppliersPage() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Edit Supplier</DialogTitle>
-            <DialogDescription>Update the details for this supplier.</DialogDescription>
+            <DialogDescription>
+              Update the details for this supplier.
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
@@ -332,7 +377,9 @@ export default function SuppliersPage() {
               <Input
                 id="edit-name"
                 value={newSupplier.name}
-                onChange={(e) => setNewSupplier({ ...newSupplier, name: e.target.value })}
+                onChange={(e) =>
+                  setNewSupplier({ ...newSupplier, name: e.target.value })
+                }
                 required
               />
             </div>
@@ -356,7 +403,9 @@ export default function SuppliersPage() {
                   id="edit-email"
                   type="email"
                   value={newSupplier.email}
-                  onChange={(e) => setNewSupplier({ ...newSupplier, email: e.target.value })}
+                  onChange={(e) =>
+                    setNewSupplier({ ...newSupplier, email: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -365,7 +414,9 @@ export default function SuppliersPage() {
               <Input
                 id="edit-phone"
                 value={newSupplier.phone}
-                onChange={(e) => setNewSupplier({ ...newSupplier, phone: e.target.value })}
+                onChange={(e) =>
+                  setNewSupplier({ ...newSupplier, phone: e.target.value })
+                }
               />
             </div>
             <div className="space-y-2">
@@ -373,13 +424,18 @@ export default function SuppliersPage() {
               <Textarea
                 id="edit-address"
                 value={newSupplier.address}
-                onChange={(e) => setNewSupplier({ ...newSupplier, address: e.target.value })}
+                onChange={(e) =>
+                  setNewSupplier({ ...newSupplier, address: e.target.value })
+                }
                 rows={3}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+            >
               Cancel
             </Button>
             <Button onClick={handleEditSupplier}>Save Changes</Button>
@@ -394,11 +450,15 @@ export default function SuppliersPage() {
             <DialogTitle>Confirm Deletion</DialogTitle>
             <DialogDescription>
               Are you sure you want to delete the supplier{" "}
-              <span className="font-semibold">{selectedSupplier?.name}</span>? This action cannot be undone.
+              <span className="font-semibold">{selectedSupplier?.name}</span>?
+              This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleDeleteSupplier}>
@@ -408,5 +468,5 @@ export default function SuppliersPage() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

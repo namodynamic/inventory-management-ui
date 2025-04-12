@@ -22,62 +22,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { AlertTriangle, Edit, MoreHorizontal, Plus, Search, Trash2 } from "lucide-react"
-import { inventoryAPI, supplierAPI, type InventoryItem, type Supplier, type InventoryItemSupplier } from "@/lib/api"
+import { inventoryAPI, supplierAPI, itemSupplierAPI } from "@/lib/api"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-// Mock API for inventory-supplier relationships (would be implemented in the real API)
-const inventorySupplierAPI = {
-  getInventorySuppliers: async () => {
-    // This would be a real API call in production
-    return [
-      {
-        id: 1,
-        item: 1,
-        supplier: 1,
-        supplier_name: "Acme Supplies",
-        supplier_sku: "ACME-001",
-        supplier_price: "9.99",
-        lead_time_days: 5,
-        notes: "Preferred supplier for this item",
-      },
-      {
-        id: 2,
-        item: 1,
-        supplier: 2,
-        supplier_name: "Global Distribution",
-        supplier_sku: "GD-12345",
-        supplier_price: "10.50",
-        lead_time_days: 7,
-        notes: "Backup supplier",
-      },
-    ] as InventoryItemSupplier[]
-  },
-  createInventorySupplier: async (data: any) => {
-    // This would be a real API call in production
-    console.log("Creating inventory supplier:", data)
-    return {
-      id: Math.floor(Math.random() * 1000),
-      ...data,
-    }
-  },
-  updateInventorySupplier: async (id: number, data: any) => {
-    // This would be a real API call in production
-    console.log("Updating inventory supplier:", id, data)
-    return {
-      id,
-      ...data,
-    }
-  },
-  deleteInventorySupplier: async (id: number) => {
-    // This would be a real API call in production
-    console.log("Deleting inventory supplier:", id)
-    return { success: true }
-  },
-}
 
 export default function InventorySuppliersPage() {
-  const [inventorySuppliers, setInventorySuppliers] = useState<InventoryItemSupplier[]>([])
+  const [itemSuppliers, setItemSuppliers] = useState<InventoryItemSupplier[]>([])
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([])
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -102,16 +53,16 @@ export default function InventorySuppliersPage() {
     const fetchData = async () => {
       try {
         setIsLoading(true)
-        const [inventorySuppliersData, itemsData, suppliersData] = await Promise.all([
-          inventorySupplierAPI.getInventorySuppliers(),
+        const [itemSuppliersData, itemsData, suppliersData] = await Promise.all([
+          itemSupplierAPI.getItemSuppliers(),
           inventoryAPI.getItems(),
           supplierAPI.getSuppliers(),
         ])
 
-        // Ensure all data is arrays
-        setInventorySuppliers(Array.isArray(inventorySuppliersData) ? inventorySuppliersData : [])
-        setInventoryItems(Array.isArray(itemsData) ? itemsData : [])
-        setSuppliers(Array.isArray(suppliersData) ? suppliersData : [])
+        setItemSuppliers(Array.isArray(itemSuppliersData.results) ? itemSuppliersData.results : [])
+        setInventoryItems(Array.isArray(itemsData.results) ? itemsData.results : [])
+        setSuppliers(Array.isArray(suppliersData.results) ? suppliersData.results : [])
+
       } catch (err) {
         setError("Failed to fetch inventory supplier data")
         console.error(err)
@@ -123,26 +74,24 @@ export default function InventorySuppliersPage() {
     fetchData()
   }, [])
 
-  // Filter inventory suppliers based on search query and filters
-  const filteredInventorySuppliers = Array.isArray(inventorySuppliers)
-    ? inventorySuppliers.filter((inventorySupplier) => {
-        // Get item and supplier names for searching
-        const item = inventoryItems.find((i) => i.id === inventorySupplier.item)
-        const supplier = suppliers.find((s) => s.id === inventorySupplier.supplier)
+  const filteredInventorySuppliers = Array.isArray(itemSuppliers)
+    ? itemSuppliers.filter((itemSupplier) => {
+        const item = inventoryItems.find((i) => i.id === itemSupplier.item)
+        const supplier = suppliers.find((s) => s.id === itemSupplier.supplier)
 
         // Apply search filter
         const matchesSearch =
           searchQuery === "" ||
           (item && item.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
           (supplier && supplier.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-          (inventorySupplier.supplier_sku &&
-            inventorySupplier.supplier_sku.toLowerCase().includes(searchQuery.toLowerCase()))
+          (itemSupplier.supplier_sku &&
+            itemSupplier.supplier_sku.toLowerCase().includes(searchQuery.toLowerCase()))
 
         // Apply item filter
-        const matchesItem = itemFilter === "all" || inventorySupplier.item.toString() === itemFilter
+        const matchesItem = itemFilter === "all" || itemSupplier.item.toString() === itemFilter
 
         // Apply supplier filter
-        const matchesSupplier = supplierFilter === "all" || inventorySupplier.supplier.toString() === supplierFilter
+        const matchesSupplier = supplierFilter === "all" || itemSupplier.supplier.toString() === supplierFilter
 
         return matchesSearch && matchesItem && matchesSupplier
       })
@@ -151,6 +100,7 @@ export default function InventorySuppliersPage() {
   const handleAddInventorySupplier = async () => {
     try {
       const data = {
+        id: 0,
         item: Number(newInventorySupplier.item),
         supplier: Number(newInventorySupplier.supplier),
         supplier_sku: newInventorySupplier.supplier_sku,
@@ -158,10 +108,9 @@ export default function InventorySuppliersPage() {
         lead_time_days: newInventorySupplier.lead_time_days ? Number(newInventorySupplier.lead_time_days) : null,
         notes: newInventorySupplier.notes,
       }
-
-      await inventorySupplierAPI.createInventorySupplier(data)
-      const updatedInventorySuppliers = await inventorySupplierAPI.getInventorySuppliers()
-      setInventorySuppliers(Array.isArray(updatedInventorySuppliers) ? updatedInventorySuppliers : [])
+      await itemSupplierAPI.createItemSupplier(data)
+      const updatedInventorySuppliers = await itemSupplierAPI.getItemSuppliers()
+      setItemSuppliers(Array.isArray(updatedInventorySuppliers.results) ? updatedInventorySuppliers.results : [])
       setIsAddDialogOpen(false)
       setNewInventorySupplier({
         item: "",
@@ -181,6 +130,7 @@ export default function InventorySuppliersPage() {
 
     try {
       const data = {
+        id: selectedInventorySupplier.id,
         item: Number(newInventorySupplier.item),
         supplier: Number(newInventorySupplier.supplier),
         supplier_sku: newInventorySupplier.supplier_sku,
@@ -189,9 +139,9 @@ export default function InventorySuppliersPage() {
         notes: newInventorySupplier.notes,
       }
 
-      await inventorySupplierAPI.updateInventorySupplier(selectedInventorySupplier.id, data)
-      const updatedInventorySuppliers = await inventorySupplierAPI.getInventorySuppliers()
-      setInventorySuppliers(Array.isArray(updatedInventorySuppliers) ? updatedInventorySuppliers : [])
+      await itemSupplierAPI.updateItemSupplier(selectedInventorySupplier.id, data)
+      const updatedInventorySuppliers = await itemSupplierAPI.getItemSuppliers()
+      setItemSuppliers(Array.isArray(updatedInventorySuppliers.results) ? updatedInventorySuppliers.results : [])
       setIsEditDialogOpen(false)
       setSelectedInventorySupplier(null)
       setNewInventorySupplier({
@@ -211,9 +161,9 @@ export default function InventorySuppliersPage() {
     if (!selectedInventorySupplier) return
 
     try {
-      await inventorySupplierAPI.deleteInventorySupplier(selectedInventorySupplier.id)
-      const updatedInventorySuppliers = await inventorySupplierAPI.getInventorySuppliers()
-      setInventorySuppliers(Array.isArray(updatedInventorySuppliers) ? updatedInventorySuppliers : [])
+      await itemSupplierAPI.deleteItemSupplier(selectedInventorySupplier.id)
+      const updatedInventorySuppliers = await itemSupplierAPI.getItemSuppliers()
+      setItemSuppliers(Array.isArray(updatedInventorySuppliers.results) ? updatedInventorySuppliers.results : [])
       setIsDeleteDialogOpen(false)
       setSelectedInventorySupplier(null)
     } catch (err) {
