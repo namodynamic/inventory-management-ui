@@ -5,41 +5,9 @@ import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
-// Base API URL - replace with your actual API URL
-const API_BASE_URL = "http://localhost:8000/api"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
-// Types
-export interface User {
-  id: number
-  username: string
-  email: string
-  first_name?: string
-  last_name?: string
-}
 
-interface AuthTokens {
-  access: string
-  refresh: string
-}
-
-interface AuthContextType {
-  user: User | null
-  tokens: AuthTokens | null
-  isLoading: boolean
-  login: (username: string, password: string) => Promise<void>
-  register: (userData: RegisterData) => Promise<void>
-  logout: () => Promise<void>
-}
-
-export interface RegisterData {
-  username: string
-  email: string
-  password: string
-  first_name?: string
-  last_name?: string
-}
-
-// Create context
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 // Auth Provider component
@@ -61,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       fetchUserProfile(parsedTokens.access)
     } else {
       setIsLoading(false)
-    }
+    }  
   }, [])
 
   // Fetch user profile
@@ -90,6 +58,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+   // Helper function for API requests
+   const fetchWithAuth = async (endpoint: string, options: RequestInit = {}) => {
+    const url = `${API_BASE_URL}${endpoint}`
+    const headers = {
+      "Content-Type": "application/json",
+      ...(tokens ? { Authorization: `Bearer ${tokens.access}` } : {}),
+      ...options.headers,
+    }
+
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    })
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        // Handle unauthorized - clear auth and redirect to login
+        localStorage.removeItem("auth_tokens")
+        localStorage.removeItem("auth_user")
+        setTokens(null)
+        setUser(null)
+        router.push("/login")
+        throw new Error("Session expired. Please login again.")
+      }
+
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.detail || "Request failed")
+    }
+
+    return response.json()
+  }
+
   // Login function
   const login = async (username: string, password: string) => {
     setIsLoading(true)
@@ -111,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const tokenData = await tokenResponse.json()
 
-      // Save tokens
+      // Save tokens 
       localStorage.setItem(
         "auth_tokens",
         JSON.stringify({
@@ -124,6 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         access: tokenData.access,
         refresh: tokenData.refresh,
       })
+
 
       // Fetch user profile
       await fetchUserProfile(tokenData.access)
@@ -157,10 +158,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(errorMessage || "Registration failed")
       }
 
-      // After successful registration, log the user in
       await login(userData.username, userData.password)
     } catch (error) {
       console.error("Registration error:", error)
+      throw error
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Update profile function
+  const updateProfile = async (userData: Partial<User>) => {
+    setIsLoading(true)
+
+    try {
+      const updatedUser = await fetchWithAuth("/inventory/users/me/", {
+        method: "PATCH",
+        body: JSON.stringify(userData),
+      })
+
+      // Update local storage and state with new user data
+      const updatedUserData = { ...user, ...updatedUser }
+      localStorage.setItem("auth_user", JSON.stringify(updatedUserData))
+      setUser(updatedUserData)
+
+      return updatedUser
+    } catch (error) {
+      console.error("Update profile error:", error)
+      throw error
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Change password function
+  const changePassword = async (currentPassword: string, newPassword: string) => {
+    setIsLoading(true)
+
+    try {
+      // Use the users/me endpoint with PATCH method for password change
+      await fetchWithAuth("/inventory/users/me/", {
+        method: "PATCH",
+        body: JSON.stringify({
+          current_password: currentPassword,
+          password: newPassword,
+        }),
+      })
+    } catch (error) {
+      console.error("Change password error:", error)
       throw error
     } finally {
       setIsLoading(false)
@@ -191,7 +236,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, tokens, isLoading, login, register, logout }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, tokens, isLoading, login, register, logout, updateProfile, changePassword }}>{children}</AuthContext.Provider>
   )
 }
 

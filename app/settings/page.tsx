@@ -9,8 +9,17 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { AlertCircle, CheckCircle, Loader2 } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useAuth } from "@/lib/auth"
 
 export default function SettingsPage() {
+  const { user, isLoading: authLoading, updateProfile, changePassword } = useAuth()
+
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+
   const [emailNotifications, setEmailNotifications] = useState(true)
   const [lowStockAlerts, setLowStockAlerts] = useState(true)
   const [activitySummary, setActivitySummary] = useState(true)
@@ -18,8 +27,124 @@ export default function SettingsPage() {
   const [defaultCurrency, setDefaultCurrency] = useState("USD")
   const [defaultDateFormat, setDefaultDateFormat] = useState("MM/DD/YYYY")
 
+  // User form state
+  const [userForm, setUserForm] = useState({
+    first_name: user?.first_name || "",
+    last_name: user?.last_name || "",
+    email: user?.email || "",
+    username: user?.username || "",
+  })
+
+  // Password form state
+  const [passwordForm, setPasswordForm] = useState({
+    current_password: "",
+    new_password: "",
+    confirm_password: "",
+  })
+
+  const handleUpdateProfile = async () => {
+    try {
+      setIsSaving(true)
+      setError(null)
+      setSuccess(null)
+
+      await updateProfile(userForm)
+      setSuccess("Profile updated successfully")
+    } catch (err) {
+      console.error("Failed to update profile:", err)
+      setError("Failed to update profile. Please try again.")
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleChangePassword = async () => {
+    try {
+      setIsSaving(true)
+      setError(null)
+      setSuccess(null)
+
+      // Validate passwords match
+      if (passwordForm.new_password !== passwordForm.confirm_password) {
+        setError("New passwords do not match")
+        setIsSaving(false)
+        return
+      }
+
+      // Send password update request
+      await changePassword(passwordForm.current_password, passwordForm.new_password)
+
+      // Clear password form
+      setPasswordForm({
+        current_password: "",
+        new_password: "",
+        confirm_password: "",
+      })
+
+      setSuccess("Password changed successfully")
+    } catch (err) {
+      console.error("Failed to change password:", err)
+      setError("Failed to change password. Please check your current password and try again.")
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleSaveGeneralSettings = () => {
+    //TODO: This would typically save to an API
+    setSuccess("General settings saved successfully")
+
+    // Clear success message after 3 seconds
+    setTimeout(() => {
+      setSuccess(null)
+    }, 3000)
+  }
+
+  const handleSaveNotificationSettings = () => {
+    //TODO: This would typically save to an API
+    setSuccess("Notification settings saved successfully")
+
+    // Clear success message after 3 seconds
+    setTimeout(() => {
+      setSuccess(null)
+    }, 3000)
+  }
+
+  const getUserInitials = () => {
+    if (!user) return "U"
+    if (user.first_name && user.last_name) {
+      return `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()
+    }
+    return user.username.substring(0, 2).toUpperCase()
+  }
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
+          <p className="mt-2">Loading settings...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {success && (
+        <Alert className="bg-green-50 text-green-700 border-green-200">
+          <CheckCircle className="h-4 w-4" />
+          <AlertDescription>{success}</AlertDescription>
+        </Alert>
+      )}
+
       <Tabs defaultValue="general">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="general">General</TabsTrigger>
@@ -56,6 +181,7 @@ export default function SettingsPage() {
                     <SelectItem value="USD">USD ($)</SelectItem>
                     <SelectItem value="EUR">EUR (€)</SelectItem>
                     <SelectItem value="GBP">GBP (£)</SelectItem>
+                    <SelectItem value="NGN">NGN (₦)</SelectItem>
                     <SelectItem value="JPY">JPY (¥)</SelectItem>
                     <SelectItem value="CAD">CAD ($)</SelectItem>
                   </SelectContent>
@@ -77,7 +203,7 @@ export default function SettingsPage() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button>Save Changes</Button>
+              <Button onClick={handleSaveGeneralSettings}>Save Changes</Button>
             </CardFooter>
           </Card>
 
@@ -117,8 +243,8 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center gap-4">
                 <Avatar className="h-16 w-16">
-                  <AvatarImage src="/placeholder.svg?height=64&width=64" alt="User" />
-                  <AvatarFallback>JD</AvatarFallback>
+                  <AvatarImage src="/placeholder.svg?height=64&width=64" alt={user?.username || "User"} />
+                  <AvatarFallback>{getUserInitials()}</AvatarFallback>
                 </Avatar>
                 <div>
                   <Button variant="outline" size="sm">
@@ -129,22 +255,52 @@ export default function SettingsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="full-name">Full Name</Label>
-                  <Input id="full-name" defaultValue="John Doe" />
+                  <Label htmlFor="first-name">First Name</Label>
+                  <Input
+                    id="first-name"
+                    value={userForm.first_name}
+                    onChange={(e) => setUserForm({ ...userForm, first_name: e.target.value })}
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" defaultValue="john.doe@example.com" />
+                  <Label htmlFor="last-name">Last Name</Label>
+                  <Input
+                    id="last-name"
+                    value={userForm.last_name}
+                    onChange={(e) => setUserForm({ ...userForm, last_name: e.target.value })}
+                  />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="company">Company</Label>
-                <Input id="company" defaultValue="Acme Inc." />
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={userForm.email}
+                  onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="company">Username</Label>
+                <Input
+                  id="company"
+                  value={userForm.username}
+                  onChange={(e) => setUserForm({ ...userForm, username: e.target.value })}
+                />
+              </div>
+
+              <div className="text-sm text-gray-500 mt-2">
+                <p>Member since: N/A</p>
+                <p>Last login: N/A</p>
               </div>
             </CardContent>
             <CardFooter>
-              <Button>Update Profile</Button>
+              <Button onClick={handleUpdateProfile} disabled={isSaving}>
+                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                {isSaving ? "Updating..." : "Update Profile"}
+              </Button>
             </CardFooter>
           </Card>
 
@@ -156,21 +312,47 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="current-password">Current Password</Label>
-                <Input id="current-password" type="password" />
+                <Input
+                  id="current-password"
+                  type="password"
+                  value={passwordForm.current_password}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, current_password: e.target.value })}
+                />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="new-password">New Password</Label>
-                  <Input id="new-password" type="password" />
+                  <Input
+                    id="new-password"
+                    type="password"
+                    value={passwordForm.new_password}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="confirm-password">Confirm Password</Label>
-                  <Input id="confirm-password" type="password" />
+                  <Input
+                    id="confirm-password"
+                    type="password"
+                    value={passwordForm.confirm_password}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, confirm_password: e.target.value })}
+                  />
                 </div>
               </div>
             </CardContent>
             <CardFooter>
-              <Button>Change Password</Button>
+              <Button
+                onClick={handleChangePassword}
+                disabled={
+                  isSaving ||
+                  !passwordForm.current_password ||
+                  !passwordForm.new_password ||
+                  !passwordForm.confirm_password
+                }
+              >
+                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                {isSaving ? "Changing..." : "Change Password"}
+              </Button>
             </CardFooter>
           </Card>
         </TabsContent>
@@ -208,12 +390,12 @@ export default function SettingsPage() {
 
               <div className="space-y-2 pt-2">
                 <Label htmlFor="notification-email">Notification Email</Label>
-                <Input id="notification-email" type="email" defaultValue="john.doe@example.com" />
+                <Input id="notification-email" type="email" defaultValue={user?.email || ""} />
                 <p className="text-sm text-gray-500">Email address for receiving notifications</p>
               </div>
             </CardContent>
             <CardFooter>
-              <Button>Save Notification Settings</Button>
+              <Button onClick={handleSaveNotificationSettings}>Save Notification Settings</Button>
             </CardFooter>
           </Card>
 

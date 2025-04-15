@@ -1,5 +1,4 @@
-// Base API URL - replace with your actual API URL
-const API_BASE_URL = "http://localhost:8000/api"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 // Helper function for making API requests
 async function fetchAPI(endpoint: string, options: RequestInit = {}) {

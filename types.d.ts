@@ -72,6 +72,8 @@ interface AuthContextType {
     login: (username: string, password: string) => Promise<void>
     register: (userData: RegisterData) => Promise<void>
     logout: () => Promise<void>
+    changePassword: (currentPassword: string, newPassword: string) => Promise<void>
+    updateProfile: (userData: Partial<User>) => Promise<void>
   }
   
 interface RegisterData {
