@@ -20,6 +20,7 @@ import {
 } from "@/components/inventory-charts";
 import { DashboardMetrics } from "@/components/dashboard-metrics";
 import { InventoryByCategory } from "@/components/inventory-category-card";
+import { getInventoryTrendData } from "@/lib/utils";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -64,7 +65,7 @@ export default function Dashboard() {
     fetchDashboardData();
   }, []);
 
-  // Update the dashboard metrics calculations to handle empty arrays
+  // dashboard metrics calculations to handle empty arrays
   const totalItems = Array.isArray(inventoryItems) ? inventoryItems.length : 0;
   const lowStockItems = Array.isArray(inventoryItems)
     ? inventoryItems.filter((item) => item.is_low_stock).length
@@ -87,6 +88,8 @@ export default function Dashboard() {
       Quantity: item.quantity,
       Threshold: item.low_stock_threshold ?? 10,
     }));
+
+  const {trendData, currentYearValue, currentMonthValue} = getInventoryTrendData(inventoryItems);
 
   if (isLoading) {
     return (
@@ -130,7 +133,7 @@ export default function Dashboard() {
       />
 
       <div className="grid gap-4 md:grid-cols-2">
-        <InventoryTrendChart />
+        <InventoryTrendChart trendData={trendData} currentYearValue={currentYearValue} currentMonthValue={currentMonthValue} />
 
         <LowStockAlertsChart lowStockData={lowStockData} />
       </div>

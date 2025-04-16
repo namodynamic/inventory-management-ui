@@ -1,7 +1,8 @@
 "use client";
 
-import { TrendingUp } from "lucide-react";
-
+import { useState } from "react";
+import { AlertTriangle, TrendingUp } from "lucide-react";
+import CountUp from "react-countup";
 import {
   Card,
   CardContent,
@@ -10,7 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
 import {
   type ChartConfig,
   ChartContainer,
@@ -20,10 +20,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle } from "lucide-react";
-
-import { useState } from "react";
-
+import { Button } from "./ui/button";
 import {
   LineChart,
   Bar,
@@ -34,41 +31,9 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
-  Legend, LabelList
+  Legend,
+  LabelList,
 } from "recharts";
-
-import { Button } from "./ui/button";
-
-// mock data
-const barChartData = [
-  { month: "January", available: 400, sold: 120 },
-  { month: "February", available: 380, sold: 140 },
-  { month: "March", available: 300, sold: 180 },
-  { month: "April", available: 450, sold: 200 },
-  { month: "May", available: 500, sold: 220 },
-  { month: "June", available: 470, sold: 210 },
-  { month: "July", available: 520, sold: 250 },
-  { month: "August", available: 600, sold: 300 },
-  { month: "September", available: 550, sold: 280 },
-  { month: "October", available: 580, sold: 290 },
-  { month: "November", available: 600, sold: 310 },
-  { month: "December", available: 700, sold: 350 },
-];
-
-const lineChartData = [
-  { month: "Jan", stock: 400 },
-  { month: "Feb", stock: 380 },
-  { month: "Mar", stock: 300 },
-  { month: "Apr", stock: 450 },
-  { month: "May", stock: 500 },
-  { month: "Jun", stock: 1000 },
-  { month: "Jul", stock: 520 },
-  { month: "Aug", stock: 480 },
-  { month: "Sep", stock: 460 },
-  { month: "Oct", stock: 430 },
-  { month: "Nov", stock: 1169 },
-  { month: "Dec", stock: 390 },
-];
 
 const chartConfig = {
   available: {
@@ -81,8 +46,11 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-
-export function InventoryTrendChart() {
+export const InventoryTrendChart: React.FC<InventoryTrendChartProps> = ({
+  trendData,
+  currentYearValue,
+  currentMonthValue,
+}) => {
   const [chartType, setChartType] = useState<"line" | "bar">("line");
 
   return (
@@ -90,12 +58,36 @@ export function InventoryTrendChart() {
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle className="text-xl font-semibold">
-           {chartType === "line" ? "Inventory Trends" : "$45,231.89"}
+            {chartType === "line" ? (
+              "Inventory Trends"
+            ) : (
+              <CountUp
+                start={0}
+                end={currentYearValue}
+                prefix="$"
+                separator=","
+                decimals={2}
+              />
+            )}{" "}
           </CardTitle>
           <CardDescription>
-            {chartType === "line"
-              ? "Monthly stock level overview"
-              : `January - December ${new Date().getFullYear()}`}
+            {chartType === "line" ? (
+              <>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                  <span>Monthly stock level overview:</span>
+                  <CountUp
+                    start={0}
+                    end={currentMonthValue}
+                    prefix="$"
+                    separator=","
+                    decimals={2}
+                    className="font-semibold text-primary"
+                  />
+                </div>
+              </>
+            ) : (
+              `January - December ${new Date().getFullYear()}`
+            )}
           </CardDescription>
         </div>
         <div className="flex gap-2">
@@ -120,13 +112,13 @@ export function InventoryTrendChart() {
           <>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
-                data={lineChartData}
+                data={trendData}
                 margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
-                <Tooltip />
+                <Tooltip labelStyle={{ color: "hsl(var(--chart-6))", fontWeight: "bold" }} />
                 <Legend />
                 <Line
                   type="monotone"
@@ -147,7 +139,7 @@ export function InventoryTrendChart() {
             <ChartContainer config={chartConfig}>
               <BarChart
                 accessibilityLayer
-                data={barChartData}
+                data={trendData}
                 margin={{
                   left: -16,
                   right: 0,
@@ -198,8 +190,7 @@ export function InventoryTrendChart() {
       </CardContent>
     </Card>
   );
-}
-
+};
 
 export const LowStockAlertsChart: React.FC<LowStockAlertsProps> = ({
   lowStockData,
@@ -240,7 +231,7 @@ export const LowStockAlertsChart: React.FC<LowStockAlertsProps> = ({
                   borderRadius: 8,
                   border: "none",
                 }}
-                labelStyle={{ fontWeight: "bold" }}
+                labelStyle={{ color: "hsl(var(--chart-6))", fontWeight: "bold" }}
               />
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Bar

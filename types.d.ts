@@ -129,4 +129,10 @@ interface DashboardMetricsProps {
   totalValue: number;
   totalCategories: number;
 }
+
+interface InventoryTrendChartProps {
+  trendData: { month: string; stock: number; available: number; sold: number }[];
+  currentYearValue: number;
+  currentMonthValue: number;
+};
   
