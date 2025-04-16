@@ -19,17 +19,21 @@ import {
   Package,
   Tag,
 } from "lucide-react";
-import {
-  inventoryAPI,
-  logAPI,
-  categoryAPI,
-  type InventoryItem,
-  type InventoryLog,
-  type Category,
-} from "@/lib/api";
+import { inventoryAPI, logAPI, categoryAPI } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/lib/auth";
+import { InventoryTrendChart } from "@/components/inventory-chart";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  LabelList,
+} from "recharts";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -89,16 +93,14 @@ export default function Dashboard() {
     ? new Set(inventoryItems.map((item) => item.category)).size
     : 0;
 
-  // For demo purposes, let's create some mock data for the chart
-  const mockMonthlyData = [
-    { month: "Jan", value: 120 },
-    { month: "Feb", value: 150 },
-    { month: "Mar", value: 180 },
-    { month: "Apr", value: 220 },
-    { month: "May", value: 270 },
-    { month: "Jun", value: 250 },
-  ];
-
+  const lowStockData = inventoryItems
+    .filter((item) => item.is_low_stock)
+    .slice(0, 5)
+    .map((item) => ({
+      name: item.name,
+      Quantity: item.quantity,
+      Threshold: item.low_stock_threshold ?? 10,
+    }));
 
   if (isLoading) {
     return (
@@ -195,76 +197,73 @@ export default function Dashboard() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="col-span-1">
-          <CardHeader>
-            <CardTitle>Inventory Trends</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[200px] flex items-end gap-2">
-              {mockMonthlyData.map((data, i) => {
-                const maxValue = Math.max(
-                  ...mockMonthlyData.map((item) => item.value)
-                );
-                const heightPercentage = (data.value / maxValue) * 100;
-
-                return (
-                  <div
-                    key={i}
-                    className="relative flex-1 flex flex-col items-center"
-                  >
-                    <div
-                      className="bg-primary rounded-t w-full"
-                      style={{ height: `${heightPercentage}%` }}
-                    ></div>
-                    <div className="absolute bottom-[calc(100%+4px)] text-xs font-medium">
-                      {data.value}
-                    </div>
-                    <span className="text-xs mt-1">{data.month}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+        <InventoryTrendChart />
 
         <Card className="col-span-1">
           <CardHeader>
-            <CardTitle>Low Stock Alerts</CardTitle>
+            <CardTitle className="flex items-center justify-between">
+              Low Stock Alerts
+              <Badge
+                variant="outline"
+                className="bg-red-50 text-red-700 border-red-200 text-xs"
+              >
+                <AlertTriangle className="h-4 w-4 mr-1" />
+                Critical
+              </Badge>
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            {inventoryItems
-              .filter((item) => item.is_low_stock)
-              .slice(0, 5)
-              .map((item) => (
-                <div
-                  key={item.id}
-                  className="mb-4 last:mb-0 flex items-center justify-between"
+            {lowStockData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={320}>
+                <BarChart
+                  data={lowStockData}
+                  margin={{ top: 20, right: 30, left: 0, bottom: 10 }}
+                  barGap={8}
                 >
-                  <div>
-                    <p className="font-medium">{item.name}</p>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm text-gray-500">
-                        {item.quantity} / {item.low_stock_threshold}
-                      </p>
-                      <Badge
-                        variant="outline"
-                        className="text-xs bg-red-50 text-red-700 border-red-200"
-                      >
-                        Low Stock
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="w-24">
-                    <Progress
-                      value={(item.quantity / item.low_stock_threshold) * 100}
-                      className="h-2 bg-red-100"
-                      indicatorClassName="bg-red-500"
+                  <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.1} />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 12 }}
+                    angle={-10}
+                    dy={10}
+                  />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#fff",
+                      borderRadius: 8,
+                      border: "none",
+                    }}
+                    labelStyle={{ fontWeight: "bold" }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Bar
+                    dataKey="Threshold"
+                    fill="hsl(var(--chart-2))"
+                    radius={[8, 8, 0, 0]}
+                    barSize={20}
+                  >
+                    <LabelList
+                      dataKey="Threshold"
+                      position="top"
+                      className="fill-muted-foreground text-xs"
                     />
-                  </div>
-                </div>
-              ))}
-            {inventoryItems.filter((item) => item.is_low_stock).length ===
-              0 && (
+                  </Bar>
+                  <Bar
+                    dataKey="Quantity"
+                    fill="#EF4444"
+                    radius={[8, 8, 0, 0]}
+                    barSize={20}
+                  >
+                    <LabelList
+                      dataKey="Quantity"
+                      position="top"
+                      className="fill-white text-xs"
+                    />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
               <div className="text-center py-4 text-gray-500">
                 No low stock items
               </div>
