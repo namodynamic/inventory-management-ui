@@ -1,36 +1,96 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Inventory Management System
+
+This is a full-stack **Inventory Management System** built with [Next.js](https://nextjs.org) for the frontend and [Django REST Framework (DRF)](https://www.django-rest-framework.org/) for the backend. The system allows users to manage inventory, track stock levels, view trends, and monitor low-stock alerts.
+
+![Dashboard dark theme](image-1.png)
+
+## Features
+
+- **Dashboard**: Displays inventory trends, low-stock alerts, and recent activity.
+- **Inventory Management**: Add, update, and delete inventory items.
+- **Category Management**: Organize inventory into categories.
+- **Charts and Analytics**: Visualize inventory trends and stock levels using interactive charts.
+- **Authentication**: Secure login and registration system.
+- **Responsive Design**: Fully responsive UI for desktop and mobile devices.
+
+## Live Demo
+
+You can view the live application here:
+
+[Live Demo](https://namo-inventory-ui.vercel.app)
+
+## Backend API
+
+The backend API for this project is built with Django REST Framework. You can find the API documentation and endpoints here:
+
+[API Documentation](https://namodynamic1.pythonanywhere.com/swagger/)
 
 ## Getting Started
 
-First, run the development server:
+Follow these steps to set up the project locally.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### Prerequisites
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Make sure you have the following installed on your system:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- [Node.js](https://nodejs.org/) (v16 or later)
+- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
+- [Python](https://www.python.org/) (v3.9 or later) for the backend
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Frontend Setup
 
-## Learn More
+1. Clone the repository:
 
-To learn more about Next.js, take a look at the following resources:
+   ```bash
+   git clone https://github.com/namodynamic/inventory-management-ui.git
+   cd inventory-management-ui
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. Install dependencies:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   ```bash
+   npm install
+    # or
+   yarn install
+   ```
 
-## Deploy on Vercel
+3. Create a `.env.local` file in the root directory and add the following environment variables:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   ```bash
+   NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+4. Start the development server:
+
+   ```bash
+   npm run dev
+    # or
+   yarn dev
+   ```
+
+5. Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
+
+### Backend Setup
+
+The backend is built using Django REST Framework. Follow the instructions in the [backend repository](https://github.com/namodynamic/inventory-management-api) to set up it up.
+
+## Technologies Used
+
+Frontend
+
+- [Next.js](https://nextjs.org/) - React framework for building web applications
+- [TypeScript](https://www.typescriptlang.org/) - Strongly typed programming language that builds on JavaScript
+- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
+- [Shadcn UI](https://ui.shadcn.com/) - UI component library  
+
+Backend
+
+- [Django](https://www.djangoproject.com/) - Python web framework
+- [Django REST Framework](https://www.django-rest-framework.org/) - REST framework for Django
+- [PostgreSQL](https://www.postgresql.org/) - Relational database management system  
+
+## Screenshots
+
+![Dashboard light theme](<Screenshot 2025-04-16 at 6.48.06 pm.png>)
+
+![Inventory Management](image.png)
