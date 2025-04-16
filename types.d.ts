@@ -107,5 +107,26 @@ interface InventoryLevel {
   low_stock_threshold: number
   is_low_stock: boolean
   last_updated: string
-}  
+}
+
+interface LowStockAlertsProps {
+  lowStockData: {
+    name: string;
+    Quantity: number;
+    Threshold: number;
+  }[];
+}
+
+interface InventoryByCategoryProps {
+  categories: Category[];
+  inventoryItems: InventoryItem[];
+}
+
+interface DashboardMetricsProps {
+  totalItems: number;
+  inventoryItems: InventoryItem[];
+  lowStockItems: number;
+  totalValue: number;
+  totalCategories: number;
+}
   
