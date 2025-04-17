@@ -2,7 +2,7 @@
 
 This is a full-stack **Inventory Management System** built with [Next.js](https://nextjs.org) for the frontend and [Django REST Framework (DRF)](https://www.django-rest-framework.org/) for the backend. The system allows users to manage inventory, track stock levels, view trends, and monitor low-stock alerts.
 
-![Dashboard dark theme](image-1.png)
+![Dashboard dark theme](image-2.png)
 
 ## Features
 

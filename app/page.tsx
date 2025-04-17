@@ -18,7 +18,7 @@ import {
   InventoryTrendChart,
   LowStockAlertsChart,
 } from "@/components/inventory-charts";
-import { DashboardMetrics } from "@/components/dashboard-metrics";
+import { DashboardMetrics } from "@/components/dashboard-metrics-cards";
 import { InventoryByCategory } from "@/components/inventory-category-card";
 import { getInventoryTrendData } from "@/lib/utils";
 
@@ -130,6 +130,7 @@ export default function Dashboard() {
         lowStockItems={lowStockItems}
         totalValue={totalValue}
         totalCategories={totalCategories}
+        lowStockData={lowStockData}
       />
 
       <div className="grid gap-4 md:grid-cols-2">

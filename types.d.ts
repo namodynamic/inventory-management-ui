@@ -128,6 +128,7 @@ interface DashboardMetricsProps {
   lowStockItems: number;
   totalValue: number;
   totalCategories: number;
+  lowStockData: { name: string; Quantity: number; Threshold: number; }[];
 }
 
 interface InventoryTrendChartProps {
