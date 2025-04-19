@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { usePathname, useRouter } from "next/navigation"
-import { Bell, Menu, Search } from "lucide-react"
+import { Bell, Menu, Search, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -75,16 +75,11 @@ export default function Header() {
     // Debounce search to avoid too many API calls
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const items = await inventoryAPI.getItems()
-        const filteredItems = Array.isArray(items)
-          ? items.filter(
-              (item) =>
-                item.name.toLowerCase().includes(query.toLowerCase()) ||
-                (item.sku && item.sku.toLowerCase().includes(query.toLowerCase())),
-            )
-          : []
+        const items = await inventoryAPI.getItems({ search: query })
+        
+        const filteredItems = Array.isArray(items.results) ? items.results.slice(0, 10) : []
 
-        setSearchResults(filteredItems.slice(0, 10)) // Limit to 10 results
+        setSearchResults(filteredItems) 
       } catch (error) {
         console.error("Error searching items:", error)
         setSearchResults([])
@@ -166,7 +161,7 @@ export default function Header() {
           <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground z-10" />
           <Input
             type="search"
-            placeholder="Search items..."
+            placeholder="Search inventory item..."
             className="w-64 pl-8 bg-background"
             value={searchQuery}
             onChange={handleSearchChange}
@@ -177,37 +172,45 @@ export default function Header() {
               <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
             </div>
           )}
-          {showResults && searchResults.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg z-50 max-h-64 overflow-y-auto">
-              {searchResults.map((item) => (
-                <div
-                  key={item.id}
-                  className="p-2 hover:bg-muted cursor-pointer flex items-center justify-between"
-                  onClick={() => handleSelectItem(item)}
-                >
-                  <div>
-                    <div className="font-medium">{item.name}</div>
-                    <div className="text-xs text-muted-foreground">{item.sku || "No SKU"}</div>
-                  </div>
-                  <div className="text-sm">
-                    {item.is_low_stock ? (
-                      <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                        Low
-                      </Badge>
-                    ) : (
-                      <span>Qty: {item.quantity}</span>
-                    )}
-                  </div>
+          {showResults && (
+            <div
+              ref={searchResultsRef}
+              className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg z-50 max-h-64 overflow-y-auto"
+            >
+              {isSearching ? (
+                <div className="p-4 text-center">
+                  <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+                  <p className="text-sm text-muted-foreground">Searching...</p>
                 </div>
-              ))}
-            </div>
-          )}
-          {showResults && searchQuery && searchResults.length === 0 && !isSearching && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg z-50 p-4 text-center text-muted-foreground">
-              No items found matching &quot;{searchQuery}&quot;
+              ) : searchResults.length > 0 ? (
+                searchResults.map((item) => (
+                  <div
+                    key={item.id}
+                    className="p-2 hover:bg-muted cursor-pointer flex items-center justify-between"
+                    onClick={() => handleSelectItem(item)}
+                  >
+                    <div>
+                      <div className="font-medium">{item.name}</div>
+                      <div className="text-xs text-muted-foreground">threshold: {item.low_stock_threshold || "N/A"}</div>
+                    </div>
+                    <div className="text-sm">
+                      {item.is_low_stock ? (
+                        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                        <AlertTriangle/>  Low
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Qty: {item.quantity}</Badge>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : searchQuery ? (
+                <div className="p-4 text-center text-muted-foreground">No items found matching &quot;{searchQuery}&quot;</div>
+              ) : null}
             </div>
           )}
         </div>
+       
         <Button variant="outline" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-600"></span>
