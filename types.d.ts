@@ -128,6 +128,7 @@ interface DashboardMetricsProps {
   lowStockItems: number;
   totalValue: number;
   totalCategories: number;
+  activeCategories: number;
   lowStockData: { name: string; Quantity: number; Threshold: number; }[];
 }
 

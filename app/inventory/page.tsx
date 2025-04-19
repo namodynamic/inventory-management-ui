@@ -1,10 +1,17 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,12 +19,26 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Badge } from "@/components/ui/badge"
-import { AlertTriangle, ChevronDown, Edit, MoreHorizontal, Plus, Search, Trash2 } from "lucide-react"
-import { inventoryAPI, categoryAPI} from "@/lib/api"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent } from "@/components/ui/card"
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import {
+  AlertTriangle,
+  ChevronDown,
+  Edit,
+  MoreHorizontal,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react";
+import { inventoryAPI, categoryAPI } from "@/lib/api";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -25,22 +46,23 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "react-hot-toast";
 
 export default function InventoryPage() {
-  const [items, setItems] = useState<InventoryItem[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [categoryFilter, setCategoryFilter] = useState<string>("all")
-  const [sortBy, setSortBy] = useState<string>("name")
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null)
+  const [items, setItems] = useState<InventoryItem[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("name");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [newItem, setNewItem] = useState({
     name: "",
     description: "",
@@ -50,31 +72,36 @@ export default function InventoryPage() {
     sku: "",
     location: "",
     low_stock_threshold: 10,
-  })
+  });
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      const [itemsData, categoriesData] = await Promise.all([
+        inventoryAPI.getItems(),
+        categoryAPI.getCategories(),
+      ]);
+
+      const itemsArray = Array.isArray(itemsData)
+        ? itemsData
+        : itemsData.results || [];
+      setItems(itemsArray);
+
+      const categoriesArray = Array.isArray(categoriesData)
+        ? categoriesData
+        : categoriesData.results || [];
+      setCategories(categoriesArray);
+    } catch (err) {
+      toast.error("Failed to fetch inventory data");
+      console.error("Failed to fetch inventory data:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true)
-        const [itemsData, categoriesData] = await Promise.all([inventoryAPI.getItems(), categoryAPI.getCategories()])
-
-        // Ensure itemsData is an array
-        const itemsArray = Array.isArray(itemsData) ? itemsData : itemsData.results || []
-        setItems(itemsArray)
-
-        // Ensure categoriesData is an array
-        const categoriesArray = Array.isArray(categoriesData) ? categoriesData : categoriesData.results || []
-        setCategories(categoriesArray)
-      } catch (err) {
-        setError("Failed to fetch inventory data")
-        console.error(err)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [])
+    fetchData();
+  }, []);
 
   const filteredItems = Array.isArray(items)
     ? items
@@ -83,27 +110,34 @@ export default function InventoryPage() {
           const matchesSearch =
             searchQuery === "" ||
             item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (item.sku && item.sku.toLowerCase().includes(searchQuery.toLowerCase()))
+            (item.sku &&
+              item.sku.toLowerCase().includes(searchQuery.toLowerCase()));
 
           // category filter
-          const matchesCategory = categoryFilter === "all" || item.category?.toString() === categoryFilter
+          const matchesCategory =
+            categoryFilter === "all" ||
+            item.category?.toString() === categoryFilter;
 
-          return matchesSearch && matchesCategory
+          return matchesSearch && matchesCategory;
         })
         .sort((a, b) => {
           // sorting
           if (sortBy === "name") {
-            return sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
+            return sortOrder === "asc"
+              ? a.name.localeCompare(b.name)
+              : b.name.localeCompare(a.name);
           } else if (sortBy === "quantity") {
-            return sortOrder === "asc" ? a.quantity - b.quantity : b.quantity - a.quantity
+            return sortOrder === "asc"
+              ? a.quantity - b.quantity
+              : b.quantity - a.quantity;
           } else if (sortBy === "price") {
             return sortOrder === "asc"
               ? Number.parseFloat(a.price) - Number.parseFloat(b.price)
-              : Number.parseFloat(b.price) - Number.parseFloat(a.price)
+              : Number.parseFloat(b.price) - Number.parseFloat(a.price);
           }
-          return 0
+          return 0;
         })
-    : []
+    : [];
 
   const handleAddItem = async () => {
     try {
@@ -113,12 +147,13 @@ export default function InventoryPage() {
         price: newItem.price.toString(),
         category: newItem.category ? Number(newItem.category) : null,
         low_stock_threshold: Number(newItem.low_stock_threshold),
-      }
+      };
 
-      await inventoryAPI.createItem(itemData)
-      const updatedItems = await inventoryAPI.getItems()
-      setItems(Array.isArray(updatedItems) ? updatedItems : [])
-      setIsAddDialogOpen(false)
+      await inventoryAPI.createItem(itemData);
+
+      await fetchData();
+
+      setIsAddDialogOpen(false);
       setNewItem({
         name: "",
         description: "",
@@ -128,27 +163,33 @@ export default function InventoryPage() {
         sku: "",
         location: "",
         low_stock_threshold: 10,
-      })
+      });
+
+      toast.success(`${itemData.name} added successfully`);
     } catch (err) {
-      console.error("Failed to add item:", err)
+      console.error("Failed to add item:", err);
+      toast.error("Failed to add item. Please try again.");
     }
-  }
+  };
 
   const handleDeleteItem = async () => {
-    if (!selectedItem) return
+    if (!selectedItem) return;
 
     try {
       if (selectedItem.id !== undefined) {
-        await inventoryAPI.deleteItem(selectedItem.id)
+        await inventoryAPI.deleteItem(selectedItem.id);
       }
-      const updatedItems = await inventoryAPI.getItems()
-      setItems(Array.isArray(updatedItems) ? updatedItems : [])
-      setIsDeleteDialogOpen(false)
-      setSelectedItem(null)
+
+      await fetchData();
+
+      setIsDeleteDialogOpen(false);
+      setSelectedItem(null);
+
+      toast.success(`${selectedItem.name} deleted successfully`);
     } catch (err) {
-      console.error("Failed to delete item:", err)
+      console.error("Failed to delete item:", err);
     }
-  }
+  };
 
   if (isLoading) {
     return (
@@ -158,7 +199,7 @@ export default function InventoryPage() {
           <p className="mt-2">Loading inventory data...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -167,10 +208,12 @@ export default function InventoryPage() {
         <div className="text-center text-red-500">
           <AlertTriangle className="h-8 w-8 mx-auto" />
           <p className="mt-2">{error}</p>
-          <p className="text-sm text-gray-500 mt-1">Please check your API connection</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Please check your API connection
+          </p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -200,7 +243,10 @@ export default function InventoryPage() {
                 <Label htmlFor="category-filter" className="whitespace-nowrap">
                   Category:
                 </Label>
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <Select
+                  value={categoryFilter}
+                  onValueChange={setCategoryFilter}
+                >
                   <SelectTrigger id="category-filter" className="w-[180px]">
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
@@ -208,7 +254,7 @@ export default function InventoryPage() {
                     <SelectItem value="all">All Categories</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category.name} value={category.name}>
-                         {category.name}
+                        {category.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -232,9 +278,15 @@ export default function InventoryPage() {
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                  onClick={() =>
+                    setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+                  }
                 >
-                  <ChevronDown className={`h-4 w-4 transition-transform ${sortOrder === "desc" ? "rotate-180" : ""}`} />
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${
+                      sortOrder === "desc" ? "rotate-180" : ""
+                    }`}
+                  />
                 </Button>
               </div>
             </div>
@@ -255,14 +307,19 @@ export default function InventoryPage() {
             <TableBody>
               {filteredItems.length > 0 ? (
                 filteredItems.map((item) => {
-                  const category = categories.find((c) => c.id === item.category)
+                  const category = categories.find(
+                    (c) => c.id === item.category
+                  );
                   return (
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">
-                        <Link href={`/inventory/${item.id}`} className="hover:text-violet-300">
-                        {item.name}
+                        <Link
+                          href={`/inventory/${item.id}`}
+                          className="hover:text-violet-300"
+                        >
+                          {item.name}
                         </Link>
-                        </TableCell>
+                      </TableCell>
                       <TableCell>{item.sku || "-"}</TableCell>
                       <TableCell>{item.owner_username || "-"}</TableCell>
                       <TableCell>{category?.name || "-"}</TableCell>
@@ -270,13 +327,18 @@ export default function InventoryPage() {
                         <div className="flex items-center justify-end gap-2">
                           {item.quantity}
                           {item.is_low_stock && (
-                            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                            <Badge
+                              variant="outline"
+                              className="bg-red-50 text-red-700 border-red-200"
+                            >
                               Low
                             </Badge>
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">${Number.parseFloat(item.price).toFixed(2)}</TableCell>
+                      <TableCell className="text-right">
+                        ${Number.parseFloat(item.price).toFixed(2)}
+                      </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -297,8 +359,8 @@ export default function InventoryPage() {
                             <DropdownMenuItem
                               className="text-red-600"
                               onClick={() => {
-                                setSelectedItem(item)
-                                setIsDeleteDialogOpen(true)
+                                setSelectedItem(item);
+                                setIsDeleteDialogOpen(true);
                               }}
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
@@ -308,11 +370,14 @@ export default function InventoryPage() {
                         </DropdownMenu>
                       </TableCell>
                     </TableRow>
-                  )
+                  );
                 })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                  <TableCell
+                    colSpan={6}
+                    className="h-24 text-center text-muted-foreground"
+                  >
                     No inventory items found.
                   </TableCell>
                 </TableRow>
@@ -327,7 +392,9 @@ export default function InventoryPage() {
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Add New Inventory Item</DialogTitle>
-            <DialogDescription>Enter the details for the new inventory item.</DialogDescription>
+            <DialogDescription>
+              Enter the details for the new inventory item.
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
@@ -336,13 +403,21 @@ export default function InventoryPage() {
                 <Input
                   id="name"
                   value={newItem.name}
-                  onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                  onChange={(e) =>
+                    setNewItem({ ...newItem, name: e.target.value })
+                  }
                   required
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="sku">SKU</Label>
-                <Input id="sku" value={newItem.sku} onChange={(e) => setNewItem({ ...newItem, sku: e.target.value })} />
+                <Input
+                  id="sku"
+                  value={newItem.sku}
+                  onChange={(e) =>
+                    setNewItem({ ...newItem, sku: e.target.value })
+                  }
+                />
               </div>
             </div>
             <div className="space-y-2">
@@ -350,7 +425,9 @@ export default function InventoryPage() {
               <Textarea
                 id="description"
                 value={newItem.description}
-                onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                onChange={(e) =>
+                  setNewItem({ ...newItem, description: e.target.value })
+                }
                 rows={3}
               />
             </div>
@@ -379,7 +456,9 @@ export default function InventoryPage() {
                   min="0"
                   step="0.01"
                   value={newItem.price}
-                  onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
+                  onChange={(e) =>
+                    setNewItem({ ...newItem, price: e.target.value })
+                  }
                   required
                 />
               </div>
@@ -387,13 +466,21 @@ export default function InventoryPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="category">Category</Label>
-                <Select value={newItem.category} onValueChange={(value) => setNewItem({ ...newItem, category: value })}>
+                <Select
+                  value={newItem.category}
+                  onValueChange={(value) =>
+                    setNewItem({ ...newItem, category: value })
+                  }
+                >
                   <SelectTrigger id="category">
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id.toString()}>
+                      <SelectItem
+                        key={category.id}
+                        value={category.id.toString()}
+                      >
                         {category.name}
                       </SelectItem>
                     ))}
@@ -405,7 +492,9 @@ export default function InventoryPage() {
                 <Input
                   id="location"
                   value={newItem.location}
-                  onChange={(e) => setNewItem({ ...newItem, location: e.target.value })}
+                  onChange={(e) =>
+                    setNewItem({ ...newItem, location: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -440,12 +529,16 @@ export default function InventoryPage() {
           <DialogHeader>
             <DialogTitle>Confirm Deletion</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete <span className="font-semibold">{selectedItem?.name}</span>? This action
-              cannot be undone.
+              Are you sure you want to delete{" "}
+              <span className="font-semibold">{selectedItem?.name}</span>? This
+              action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleDeleteItem}>
@@ -455,5 +548,5 @@ export default function InventoryPage() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

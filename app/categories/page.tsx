@@ -1,9 +1,16 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -11,9 +18,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,73 +28,85 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { AlertTriangle, Edit, MoreHorizontal, Plus, Search, Trash2 } from "lucide-react"
-import { categoryAPI} from "@/lib/api"
-import { Card, CardContent } from "@/components/ui/card"
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertTriangle,
+  Edit,
+  MoreHorizontal,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react";
+import { categoryAPI } from "@/lib/api";
+import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "react-hot-toast";
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
+    null
+  );
   const [newCategory, setNewCategory] = useState({
     name: "",
     description: "",
-  })
+  });
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setIsLoading(true)
-        const data = await categoryAPI.getCategories()
+  const fetchCategories = async () => {
+    try {
+      setIsLoading(true);
+      const data = await categoryAPI.getCategories();
       const categoriesArray = Array.isArray(data.results) ? data.results : [];
 
-        setCategories(categoriesArray)
-      } catch (err) {
-        setError("Failed to fetch categories")
-        console.error(err)
-      } finally {
-        setIsLoading(false)
-      }
+      setCategories(categoriesArray);
+    } catch (err) {
+      toast.error("Failed to fetch categories");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    fetchCategories()
-  }, [])
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   const filteredCategories = Array.isArray(categories)
-    ? categories.filter((category) => category.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    : []
+    ? categories.filter((category) =>
+        category.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
 
   const handleAddCategory = async () => {
     try {
       const response = await categoryAPI.createCategory({
         ...newCategory,
-        id: 1, 
+        id: 1,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      })
-      console.log("Add category response:", response)
+      });
+      console.log("Add category response:", response);
 
-      const updatedCategories = await categoryAPI.getCategories()
+      await fetchCategories();
 
-      const categoriesArray = Array.isArray(updatedCategories.results) ? updatedCategories.results : [];
+      setIsAddDialogOpen(false);
+      setNewCategory({ name: "", description: "" });
 
-      setCategories(categoriesArray)
-      setIsAddDialogOpen(false)
-      setNewCategory({ name: "", description: "" })
+      toast.success(`${newCategory.name} category added successfully`);
     } catch (err) {
-      console.error("Failed to add category:", err)
+      console.error("Failed to add category:", err);
+      toast.error("Failed to add category. Please try again.");
     }
-  }
+  };
 
   const handleEditCategory = async () => {
     if (!selectedCategory) return;
-  
+
     try {
       const response = await categoryAPI.updateCategory(selectedCategory.id, {
         id: selectedCategory.id,
@@ -97,34 +116,36 @@ export default function CategoriesPage() {
         updated_at: new Date().toISOString(),
       });
       console.log("Edit category response:", response);
-  
-      const updatedCategories = await categoryAPI.getCategories();
-  
-      const categoriesArray = Array.isArray(updatedCategories.results) ? updatedCategories.results : [];
-      setCategories(categoriesArray);
+
+      await fetchCategories();
+
       setIsEditDialogOpen(false);
       setSelectedCategory(null);
       setNewCategory({ name: "", description: "" });
+
+      toast.success(`${newCategory.name} category updated successfully`);
     } catch (err) {
       console.error("Failed to update category:", err);
+      toast.error("Failed to update category. Please try again.");
     }
   };
 
   const handleDeleteCategory = async () => {
     if (!selectedCategory) return;
-  
+
     try {
       const response = await categoryAPI.deleteCategory(selectedCategory.id);
       console.log("Delete category response:", response);
-  
-      const updatedCategories = await categoryAPI.getCategories();
-  
-      const categoriesArray = Array.isArray(updatedCategories.results) ? updatedCategories.results : [];
-      setCategories(categoriesArray);
+
+      await fetchCategories();
+
       setIsDeleteDialogOpen(false);
       setSelectedCategory(null);
+
+      toast.success(`${selectedCategory.name} category deleted successfully`);
     } catch (err) {
       console.error("Failed to delete category:", err);
+      toast.error("Failed to delete category. Please try again.");
     }
   };
 
@@ -136,7 +157,7 @@ export default function CategoriesPage() {
           <p className="mt-2">Loading categories...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -145,10 +166,12 @@ export default function CategoriesPage() {
         <div className="text-center text-red-500">
           <AlertTriangle className="h-8 w-8 mx-auto" />
           <p className="mt-2">{error}</p>
-          <p className="text-sm text-gray-500 mt-1">Please check your API connection</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Please check your API connection
+          </p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -186,7 +209,9 @@ export default function CategoriesPage() {
               {filteredCategories.length > 0 ? (
                 filteredCategories.map((category) => (
                   <TableRow key={category.id}>
-                    <TableCell className="font-medium">{category.name}</TableCell>
+                    <TableCell className="font-medium">
+                      {category.name}
+                    </TableCell>
                     <TableCell>
                       {category.description
                         ? category.description.length > 50
@@ -194,8 +219,12 @@ export default function CategoriesPage() {
                           : category.description
                         : "-"}
                     </TableCell>
-                    <TableCell>{new Date(category.created_at).toLocaleDateString()}</TableCell>
-                    <TableCell>{new Date(category.updated_at).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      {new Date(category.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      {new Date(category.updated_at).toLocaleDateString()}
+                    </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -209,12 +238,12 @@ export default function CategoriesPage() {
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => {
-                              setSelectedCategory(category)
+                              setSelectedCategory(category);
                               setNewCategory({
                                 name: category.name,
                                 description: category.description || "",
-                              })
-                              setIsEditDialogOpen(true)
+                              });
+                              setIsEditDialogOpen(true);
                             }}
                           >
                             <Edit className="h-4 w-4 mr-2" />
@@ -223,8 +252,8 @@ export default function CategoriesPage() {
                           <DropdownMenuItem
                             className="text-red-600"
                             onClick={() => {
-                              setSelectedCategory(category)
-                              setIsDeleteDialogOpen(true)
+                              setSelectedCategory(category);
+                              setIsDeleteDialogOpen(true);
                             }}
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
@@ -237,7 +266,10 @@ export default function CategoriesPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                  <TableCell
+                    colSpan={5}
+                    className="h-24 text-center text-muted-foreground"
+                  >
                     No categories found.
                   </TableCell>
                 </TableRow>
@@ -252,7 +284,9 @@ export default function CategoriesPage() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Add New Category</DialogTitle>
-            <DialogDescription>Enter the details for the new category.</DialogDescription>
+            <DialogDescription>
+              Enter the details for the new category.
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
@@ -260,7 +294,9 @@ export default function CategoriesPage() {
               <Input
                 id="name"
                 value={newCategory.name}
-                onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
+                onChange={(e) =>
+                  setNewCategory({ ...newCategory, name: e.target.value })
+                }
                 required
               />
             </div>
@@ -293,7 +329,9 @@ export default function CategoriesPage() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Edit Category</DialogTitle>
-            <DialogDescription>Update the details for this category.</DialogDescription>
+            <DialogDescription>
+              Update the details for this category.
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
@@ -301,7 +339,9 @@ export default function CategoriesPage() {
               <Input
                 id="edit-name"
                 value={newCategory.name}
-                onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
+                onChange={(e) =>
+                  setNewCategory({ ...newCategory, name: e.target.value })
+                }
                 required
               />
             </div>
@@ -321,7 +361,10 @@ export default function CategoriesPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+            >
               Cancel
             </Button>
             <Button onClick={handleEditCategory}>Save Changes</Button>
@@ -336,11 +379,15 @@ export default function CategoriesPage() {
             <DialogTitle>Confirm Deletion</DialogTitle>
             <DialogDescription>
               Are you sure you want to delete the category{" "}
-              <span className="font-semibold">{selectedCategory?.name}</span>? This action cannot be undone.
+              <span className="font-semibold">{selectedCategory?.name}</span>?
+              This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleDeleteCategory}>
@@ -350,5 +397,5 @@ export default function CategoriesPage() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

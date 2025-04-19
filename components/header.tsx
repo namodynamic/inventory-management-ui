@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { usePathname } from "next/navigation"
+import { useState, useEffect, useRef } from "react"
+import { usePathname, useRouter } from "next/navigation"
 import { Bell, Menu, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,11 +19,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { inventoryAPI } from "@/lib/api"
+import { Badge } from "@/components/ui/badge"
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
   const { user, logout } = useAuth()
+
+  const router = useRouter()
+
+  const [searchQuery, setSearchQuery] = useState("")
+  const [searchResults, setSearchResults] = useState<InventoryItem[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [showResults, setShowResults] = useState(false)
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const searchResultsRef = useRef<HTMLDivElement>(null)
 
   // Get page title based on current path
   const getPageTitle = () => {
@@ -40,6 +51,69 @@ export default function Header() {
     }
     return user.username.substring(0, 2).toUpperCase()
   }
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value
+    setSearchQuery(query)
+
+    // Clear previous timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+
+    if (query.trim().length === 0) {
+      setSearchResults([])
+      setIsSearching(false)
+      setShowResults(false)
+      return
+    }
+
+    setIsSearching(true)
+    setShowResults(true)
+
+
+    // Debounce search to avoid too many API calls
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const items = await inventoryAPI.getItems()
+        const filteredItems = Array.isArray(items)
+          ? items.filter(
+              (item) =>
+                item.name.toLowerCase().includes(query.toLowerCase()) ||
+                (item.sku && item.sku.toLowerCase().includes(query.toLowerCase())),
+            )
+          : []
+
+        setSearchResults(filteredItems.slice(0, 10)) // Limit to 10 results
+      } catch (error) {
+        console.error("Error searching items:", error)
+        setSearchResults([])
+      } finally {
+        setIsSearching(false)
+      }
+    }, 300)
+  }
+
+  const handleSelectItem = (item: InventoryItem) => {
+    router.push(`/inventory/${item.id}`)
+    setShowResults(false)
+    setSearchQuery("")
+    setSearchResults([])
+  }
+
+  // click outside handler to close search results
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchResultsRef.current && !searchResultsRef.current.contains(event.target as Node)) {
+        setShowResults(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [])
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
@@ -88,10 +162,52 @@ export default function Header() {
         <h1 className="text-xl font-semibold">{getPageTitle()}</h1>
       </div>
       <div className="flex items-center gap-4">
-        <form className="hidden md:flex items-center relative">
-          <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground" />
-          <Input type="search" placeholder="Search..." className="w-64 pl-8 bg-background" />
-        </form>
+      <div className="hidden md:flex items-center relative">
+          <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground z-10" />
+          <Input
+            type="search"
+            placeholder="Search items..."
+            className="w-64 pl-8 bg-background"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            onFocus={() => setShowResults(true)}
+          />
+          {isSearching && (
+            <div className="absolute right-2.5 top-1/2 transform -translate-y-1/2">
+              <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+            </div>
+          )}
+          {showResults && searchResults.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg z-50 max-h-64 overflow-y-auto">
+              {searchResults.map((item) => (
+                <div
+                  key={item.id}
+                  className="p-2 hover:bg-muted cursor-pointer flex items-center justify-between"
+                  onClick={() => handleSelectItem(item)}
+                >
+                  <div>
+                    <div className="font-medium">{item.name}</div>
+                    <div className="text-xs text-muted-foreground">{item.sku || "No SKU"}</div>
+                  </div>
+                  <div className="text-sm">
+                    {item.is_low_stock ? (
+                      <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                        Low
+                      </Badge>
+                    ) : (
+                      <span>Qty: {item.quantity}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {showResults && searchQuery && searchResults.length === 0 && !isSearching && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg z-50 p-4 text-center text-muted-foreground">
+              No items found matching &quot;{searchQuery}&quot;
+            </div>
+          )}
+        </div>
         <Button variant="outline" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-600"></span>

@@ -27,6 +27,7 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
   totalValue,
   lowStockData,
   totalCategories,
+  activeCategories,
 }) => {
   // Limit the number of items for the chart to most recent 10
   const maxItems = 10;
@@ -175,13 +176,23 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
           <Tag className="h-4 w-4 text-purple-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
-            <CountUp start={0} end={totalCategories} />
-          </div>
+        <div className="flex flex-col items-center gap-2">
+      <div className="flex flex-row items-center gap-4">
+        <div className="text-center">
+          <p className="text-xs text-gray-500">Active</p>
+          <CountUp start={0} end={activeCategories} className="text-2xl font-bold text-primary" />
+        </div>
+        <span className="text-gray-400 text-4xl">/</span>
+        <div className="text-center">
+          <p className="text-xs text-gray-500">Total</p>
+          <CountUp start={0} end={totalCategories} className="text-2xl font-bold text-primary" />
+        </div>
+      </div>
           <p className="text-xs text-gray-500">
-            {totalItems > 0 ? (totalItems / totalCategories).toFixed(1) : 0}{" "}
+            {totalItems > 0 ? (totalItems / activeCategories).toFixed(1) : 0}{" "}
             items per category avg.
           </p>
+          </div>
         </CardContent>
       </Card>
     </div>

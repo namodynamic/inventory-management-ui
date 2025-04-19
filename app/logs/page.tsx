@@ -128,7 +128,7 @@ export default function LogsPage() {
               <Label htmlFor="date-range" className="whitespace-nowrap">
                 Date Range:
               </Label>
-              <DateRangePicker date={dateRange} onDateChange={setDateRange} />
+              <DateRangePicker date={dateRange} onDateChange={(date) => setDateRange({ from: date.from, to: date.to })} />
             </div>
             <div className="ml-auto">
               <Button
@@ -151,8 +151,8 @@ export default function LogsPage() {
                 <TableHead>Item</TableHead>
                 <TableHead>Action</TableHead>
                 <TableHead>User</TableHead>
-                <TableHead className="text-right">Quantity Change</TableHead>
-                <TableHead className="text-right">New Quantity</TableHead>
+                <TableHead>Qty Change</TableHead>
+                <TableHead>New Qty</TableHead>
                 <TableHead>Notes</TableHead>
               </TableRow>
             </TableHeader>
@@ -184,11 +184,11 @@ export default function LogsPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>{log.username || "-"}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell>
                       {log.action === "ADD" ? "+" : log.action === "REMOVE" ? "-" : "±"}
                       {log.quantity_change}
                     </TableCell>
-                    <TableCell className="text-right">{log.new_quantity}</TableCell>
+                    <TableCell>{log.new_quantity}</TableCell>
                     <TableCell>{log.notes || "-"}</TableCell>
                   </TableRow>
                 ))
