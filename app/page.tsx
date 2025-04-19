@@ -18,7 +18,7 @@ import {
   InventoryTrendChart,
   LowStockAlertsChart,
 } from "@/components/inventory-charts";
-import { DashboardMetrics } from "@/components/dashboard-metrics";
+import { DashboardMetrics } from "@/components/dashboard-metrics-cards";
 import { InventoryByCategory } from "@/components/inventory-category-card";
 import { getInventoryTrendData } from "@/lib/utils";
 
@@ -76,9 +76,11 @@ export default function Dashboard() {
         0
       )
     : 0;
-  const totalCategories = Array.isArray(inventoryItems)
+  const activeCategories = Array.isArray(inventoryItems)
     ? new Set(inventoryItems.map((item) => item.category)).size
     : 0;
+
+  const totalCategories = Array.isArray(categories) ? categories.length : 0;
 
   const lowStockData = inventoryItems
     .filter((item) => item.is_low_stock)
@@ -89,7 +91,8 @@ export default function Dashboard() {
       Threshold: item.low_stock_threshold ?? 10,
     }));
 
-  const {trendData, currentYearValue, currentMonthValue} = getInventoryTrendData(inventoryItems);
+  const { trendData, currentYearValue, currentMonthValue } =
+    getInventoryTrendData(inventoryItems);
 
   if (isLoading) {
     return (
@@ -130,10 +133,16 @@ export default function Dashboard() {
         lowStockItems={lowStockItems}
         totalValue={totalValue}
         totalCategories={totalCategories}
+        activeCategories={activeCategories}
+        lowStockData={lowStockData}
       />
 
       <div className="grid gap-4 md:grid-cols-2">
-        <InventoryTrendChart trendData={trendData} currentYearValue={currentYearValue} currentMonthValue={currentMonthValue} />
+        <InventoryTrendChart
+          trendData={trendData}
+          currentYearValue={currentYearValue}
+          currentMonthValue={currentMonthValue}
+        />
 
         <LowStockAlertsChart lowStockData={lowStockData} />
       </div>

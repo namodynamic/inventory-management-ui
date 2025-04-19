@@ -137,9 +137,12 @@ export const categoryAPI = {
 
 // API functions for suppliers
 export const supplierAPI = {
-  getSuppliers: (search?: string) => {
-    const queryString = search ? `?search=${encodeURIComponent(search)}` : ""
-    return fetchAPI(`/inventory/suppliers/${queryString}`)
+  getSuppliers: (params: { search?: string; item_id?: number } = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.search) queryParams.append("search", params.search);
+    if (params.item_id) queryParams.append("item_id", String(params.item_id));
+    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : "";
+    return fetchAPI(`/inventory/suppliers/${queryString}`);
   },
   getSupplier: (id: number) => fetchAPI(`/inventory/suppliers/${id}/`),
   createSupplier: (data: Supplier) =>

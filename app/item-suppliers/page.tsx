@@ -25,6 +25,7 @@ import { AlertTriangle, Edit, MoreHorizontal, Plus, Search, Trash2 } from "lucid
 import { inventoryAPI, supplierAPI, itemSupplierAPI } from "@/lib/api"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {toast} from "react-hot-toast"
 
 
 export default function InventorySuppliersPage() {
@@ -34,7 +35,7 @@ export default function InventorySuppliersPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
-  const [itemFilter, setItemFilter] = useState<string>("all")
+  const [itemFilter, setItemFilter] = useState("all")
   const [supplierFilter, setSupplierFilter] = useState<string>("all")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -120,8 +121,10 @@ export default function InventorySuppliersPage() {
         lead_time_days: "",
         notes: "",
       })
+      toast.success("Inventory supplier added successfully")
     } catch (err) {
       console.error("Failed to add inventory supplier:", err)
+      toast.error("Failed to add inventory supplier")
     }
   }
 
@@ -152,8 +155,10 @@ export default function InventorySuppliersPage() {
         lead_time_days: "",
         notes: "",
       })
+      toast.success("Inventory supplier updated successfully")
     } catch (err) {
       console.error("Failed to update inventory supplier:", err)
+      toast.error("Failed to update inventory supplier")
     }
   }
 
@@ -166,8 +171,11 @@ export default function InventorySuppliersPage() {
       setItemSuppliers(Array.isArray(updatedInventorySuppliers.results) ? updatedInventorySuppliers.results : [])
       setIsDeleteDialogOpen(false)
       setSelectedInventorySupplier(null)
+
+      toast.success("Inventory supplier deleted successfully")
     } catch (err) {
       console.error("Failed to delete inventory supplier:", err)
+      toast.error("Failed to delete inventory supplier")
     }
   }
 
@@ -266,8 +274,8 @@ export default function InventorySuppliersPage() {
                 <TableHead>Item</TableHead>
                 <TableHead>Supplier</TableHead>
                 <TableHead>Supplier SKU</TableHead>
-                <TableHead className="text-right">Price</TableHead>
-                <TableHead className="text-right">Lead Time (Days)</TableHead>
+                <TableHead>Supplier Price</TableHead>
+                <TableHead>Lead Time (Days)</TableHead>
                 <TableHead>Notes</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -284,8 +292,8 @@ export default function InventorySuppliersPage() {
                       </TableCell>
                       <TableCell>{supplier ? supplier.name : `${inventorySupplier.supplier_name}`}</TableCell>
                       <TableCell>{inventorySupplier.supplier_sku || "-"}</TableCell>
-                      <TableCell className="text-right">${inventorySupplier.supplier_price}</TableCell>
-                      <TableCell className="text-right">{inventorySupplier.lead_time_days || "-"}</TableCell>
+                      <TableCell>${inventorySupplier.supplier_price}</TableCell>
+                      <TableCell>{inventorySupplier.lead_time_days || "-"}</TableCell>
                       <TableCell>{inventorySupplier.notes || "-"}</TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>

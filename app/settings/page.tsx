@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { AlertCircle, CheckCircle, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/lib/auth"
+import { toast } from 'react-hot-toast';
 
 export default function SettingsPage() {
   const { user, isLoading: authLoading, updateProfile, changePassword } = useAuth()
@@ -45,14 +46,12 @@ export default function SettingsPage() {
   const handleUpdateProfile = async () => {
     try {
       setIsSaving(true)
-      setError(null)
-      setSuccess(null)
 
       await updateProfile(userForm)
-      setSuccess("Profile updated successfully")
+      toast.success("Profile updated successfully")
     } catch (err) {
       console.error("Failed to update profile:", err)
-      setError("Failed to update profile. Please try again.")
+      toast.error("Failed to update profile. Please try again.")
     } finally {
       setIsSaving(false)
     }
@@ -66,7 +65,7 @@ export default function SettingsPage() {
 
       // Validate passwords match
       if (passwordForm.new_password !== passwordForm.confirm_password) {
-        setError("New passwords do not match")
+        toast.error("New passwords do not match")
         setIsSaving(false)
         return
       }
@@ -81,10 +80,10 @@ export default function SettingsPage() {
         confirm_password: "",
       })
 
-      setSuccess("Password changed successfully")
+      toast.success("Password changed successfully")
     } catch (err) {
       console.error("Failed to change password:", err)
-      setError("Failed to change password. Please check your current password and try again.")
+      toast.error("Failed to change password. Please check your current password and try again.")
     } finally {
       setIsSaving(false)
     }
@@ -92,7 +91,7 @@ export default function SettingsPage() {
 
   const handleSaveGeneralSettings = () => {
     //TODO: This would typically save to an API
-    setSuccess("General settings saved successfully")
+    toast.success("General settings saved successfully")
 
     // Clear success message after 3 seconds
     setTimeout(() => {
@@ -102,7 +101,7 @@ export default function SettingsPage() {
 
   const handleSaveNotificationSettings = () => {
     //TODO: This would typically save to an API
-    setSuccess("Notification settings saved successfully")
+    toast.success("Notification settings saved successfully")
 
     // Clear success message after 3 seconds
     setTimeout(() => {
@@ -145,94 +144,12 @@ export default function SettingsPage() {
         </Alert>
       )}
 
-      <Tabs defaultValue="general">
+      <Tabs defaultValue="account" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="account">Account</TabsTrigger>
+          <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="general" className="space-y-4 pt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>General Settings</CardTitle>
-              <CardDescription>Configure general settings for your inventory system.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="default-low-stock">Default Low Stock Threshold</Label>
-                <Input
-                  id="default-low-stock"
-                  type="number"
-                  min="0"
-                  value={defaultLowStockThreshold}
-                  onChange={(e) => setDefaultLowStockThreshold(Number.parseInt(e.target.value) || 0)}
-                />
-                <p className="text-sm text-gray-500">Default threshold for new inventory items</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="default-currency">Default Currency</Label>
-                <Select value={defaultCurrency} onValueChange={setDefaultCurrency}>
-                  <SelectTrigger id="default-currency">
-                    <SelectValue placeholder="Select currency" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="USD">USD ($)</SelectItem>
-                    <SelectItem value="EUR">EUR (€)</SelectItem>
-                    <SelectItem value="GBP">GBP (£)</SelectItem>
-                    <SelectItem value="NGN">NGN (₦)</SelectItem>
-                    <SelectItem value="JPY">JPY (¥)</SelectItem>
-                    <SelectItem value="CAD">CAD ($)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="date-format">Date Format</Label>
-                <Select value={defaultDateFormat} onValueChange={setDefaultDateFormat}>
-                  <SelectTrigger id="date-format">
-                    <SelectValue placeholder="Select date format" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
-                    <SelectItem value="DD/MM/YYYY">DD/MM/YYYY</SelectItem>
-                    <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button onClick={handleSaveGeneralSettings}>Save Changes</Button>
-            </CardFooter>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Data Management</CardTitle>
-              <CardDescription>Manage your inventory data and backups.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Export Data</Label>
-                <div className="flex gap-2">
-                  <Button variant="outline">Export Inventory</Button>
-                  <Button variant="outline">Export Suppliers</Button>
-                  <Button variant="outline">Export All Data</Button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Import Data</Label>
-                <div className="flex gap-2">
-                  <Button variant="outline">Import Inventory</Button>
-                  <Button variant="outline">Import Suppliers</Button>
-                </div>
-                <p className="text-sm text-gray-500">Import data from CSV files</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="account" className="space-y-4 pt-4">
           <Card>
@@ -356,6 +273,90 @@ export default function SettingsPage() {
             </CardFooter>
           </Card>
         </TabsContent>
+
+        <TabsContent value="general" className="space-y-4 pt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>General Settings</CardTitle>
+              <CardDescription>Configure general settings for your inventory system.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="default-low-stock">Default Low Stock Threshold</Label>
+                <Input
+                  id="default-low-stock"
+                  type="number"
+                  min="0"
+                  value={defaultLowStockThreshold}
+                  onChange={(e) => setDefaultLowStockThreshold(Number.parseInt(e.target.value) || 0)}
+                />
+                <p className="text-sm text-gray-500">Default threshold for new inventory items</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="default-currency">Default Currency</Label>
+                <Select value={defaultCurrency} onValueChange={setDefaultCurrency}>
+                  <SelectTrigger id="default-currency">
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="USD">USD ($)</SelectItem>
+                    <SelectItem value="EUR">EUR (€)</SelectItem>
+                    <SelectItem value="GBP">GBP (£)</SelectItem>
+                    <SelectItem value="NGN">NGN (₦)</SelectItem>
+                    <SelectItem value="JPY">JPY (¥)</SelectItem>
+                    <SelectItem value="CAD">CAD ($)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="date-format">Date Format</Label>
+                <Select value={defaultDateFormat} onValueChange={setDefaultDateFormat}>
+                  <SelectTrigger id="date-format">
+                    <SelectValue placeholder="Select date format" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
+                    <SelectItem value="DD/MM/YYYY">DD/MM/YYYY</SelectItem>
+                    <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button onClick={handleSaveGeneralSettings}>Save Changes</Button>
+            </CardFooter>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Data Management</CardTitle>
+              <CardDescription>Manage your inventory data and backups.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Export Data</Label>
+                <div className="flex gap-2">
+                  <Button variant="outline">Export Inventory</Button>
+                  <Button variant="outline">Export Suppliers</Button>
+                  <Button variant="outline">Export All Data</Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Import Data</Label>
+                <div className="flex gap-2">
+                  <Button variant="outline">Import Inventory</Button>
+                  <Button variant="outline">Import Suppliers</Button>
+                </div>
+                <p className="text-sm text-gray-500">Import data from CSV files</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        
 
         <TabsContent value="notifications" className="space-y-4 pt-4">
           <Card>
