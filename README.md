@@ -94,6 +94,8 @@ Backend
 
 ## Screenshots
 
-![Dashboard light theme](<Screenshot 2025-04-16 at 6.48.06 pm.png>)
+![Dashboard light theme](https://github.com/user-attachments/assets/45ff608b-08cf-4b62-acc1-9b7e4ac1530b)
 
-![Inventory Management](image.png)
+
+![iventory management ](https://github.com/user-attachments/assets/4244519b-2845-4cee-9eec-26e490f391f5)
+
